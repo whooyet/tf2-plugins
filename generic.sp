@@ -1,0 +1,942 @@
+#include <sourcemod>
+#include <sdktools>
+#include <morecolors>
+#include <tf2>
+#include <tf2_stocks>
+#include <sdkhooks>
+#include <gmg\core>
+#include <gmg\misc>
+
+#define flag ADMFLAG_KICK
+// #define flag 0
+
+new Float:rof[MAXPLAYERS+1];
+new see[MAXPLAYERS+1];
+new bool:seeb[MAXPLAYERS+1];
+new bool:god[MAXPLAYERS+1];
+new bool:jump[MAXPLAYERS+1];
+new bool:bjump[MAXPLAYERS+1];
+new bool:party[MAXPLAYERS+1];
+
+public Plugin:myinfo = 
+{
+	name = "Generic Admin Commands",
+	author = "Pelipoika + take2",
+	description = "A bunch of general admin commands",
+	version = "1.3.5",
+	url = "googlehammer.com"
+}
+
+public OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	
+	RegAdminCmd("sm_bring", Command_bring, flag);
+	RegAdminCmd("sm_goto", Command_Goto, flag);
+	RegAdminCmd("sm_warp", Command_Warp, flag);
+	RegAdminCmd("sm_cri", Command_Crits, flag);
+	RegAdminCmd("sm_god", Command_God, flag);
+	RegAdminCmd("sm_stun", Command_Stun, flag);
+	RegAdminCmd("sm_hp", Command_Health, flag);
+	RegAdminCmd("sm_class", Command_Class, flag);
+	RegAdminCmd("sm_team", Command_Team, flag);
+	RegAdminCmd("sm_scramble", Command_Scramble, flag);
+	RegAdminCmd("sm_spawn", Command_Respawn, flag);
+	RegAdminCmd("sm_players", Command_Players, flag);
+	RegAdminCmd("sm_cond", Command_Addcond, flag);
+	RegAdminCmd("sm_restart", Command_Restart, flag);
+	RegAdminCmd("sm_rof", Command_Rof, flag);
+	RegAdminCmd("sm_seeyou", Command_SeeYou, 0);
+	RegAdminCmd("sm_jump", Command_Jump, flag);
+	RegAdminCmd("sm_bj", Command_BotJump, flag);
+	RegAdminCmd("sm_bot", Command_AddBot, flag);
+	RegAdminCmd("sm_party", Command_Party, flag);
+	RegAdminCmd("sm_pos", Command_Pos, flag);
+	
+	AddMultiTargetFilter("@admin", admin, "all admin", false)
+	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false)
+	AddMultiTargetFilter("@rb", redbots, "all red bots", false)
+	AddMultiTargetFilter("@bb", blubots, "all blu bots", false)
+	
+	HookEvent("player_spawn", PlayerSpawn);
+	HookEvent("player_disconnect", 	OnPlayerDisconnect, EventHookMode_Pre);
+	
+}
+
+public OnMapStart()
+{
+	PrecacheSound(SOUND_TELE);
+}
+
+public OnClientPutInServer(client)
+{
+	if(rof[client] != 0.0) rof[client] = 0.0;
+	if(see[client] != 0) see[client] = 0;
+	if(seeb[client]) seeb[client] = false;
+	if(god[client]) god[client] = false;
+	if(jump[client]) jump[client] = false;
+	if(bjump[client]) bjump[client] = false;
+	if(party[client]) party[client] = false;
+}
+
+public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if(jump[client] || god[client]) SetGod(client, true);
+}
+
+public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBroadcast) 
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	
+	if(IsValidClient(client))
+	{
+		decl String:steamID[24];
+		GetClientAuthId(client, AuthId_Steam2, steamID, sizeof(steamID));
+
+		new String:reason[64];
+		GetEventString(event, "reason", reason, sizeof(reason));
+		
+		if(StrContains(reason, "Timed out", false) != -1) CPrintToChatAll("{orange}%N{default} Timed out.", client);
+	}
+	return Plugin_Continue;
+}
+
+public Action:Command_bring(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_bring <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+	
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		if(user != client)
+		{
+			new Float:origin[3];
+			GetCollisionPoint(client, origin);
+			TeleportPlayer(user, origin, true);
+			
+			CPrintToChat(user, "{green}%N{white}님이 {green}%N{white}님을 이동시켰습니다.", client, user);
+			if(user != client) CPrintToChat(client, "{white}%N님을 {green}이동{white}시켰습니다.", user);
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Goto(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_goto <player>");
+		return Plugin_Handled;
+	}
+	
+	if(!IsPlayerAlive(client))
+	{
+		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64], target, Float:TargetOrigin[3];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	if ((target = FindTarget(client, arg, false, true)) <= 0)
+	{
+		ReplyInvalidTarget(client);
+		return Plugin_Handled;
+	}
+	
+	if(target == client) 
+	{
+		ReplyInvalidTarget(client);
+		return Plugin_Handled;
+	}
+
+	GetClientAbsOrigin(target, TargetOrigin);
+	TargetOrigin[2] += 20;
+	TeleportPlayer(client, TargetOrigin, true);
+	return Plugin_Handled;
+}
+
+public Action:Command_Warp(client, args)
+{
+	if(!IsPlayerAlive(client))
+	{
+		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		return Plugin_Handled;
+	}
+	
+	new Float:endPos[3];
+	GetCollisionPoint(client, endPos);
+	TeleportPlayer(client, endPos, true);
+	return Plugin_Handled;
+}
+
+public Action:Command_Crits(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_cri <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		TF2_AddCondition(user, TFCond_CritOnWin, -1.0);
+		CPrintToChat(user, "{white}크리 {green}On");
+		
+		if(user != client) CPrintToChat(client, "{white}%N님이 {green}크리{white}를 사용합니다.", user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_God(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_god <player> <on / off>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64], String:arg2[32];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		if(StrEqual(arg2, "on"))
+		{
+			SetGod(user, true);
+			CPrintToChat(user, "{white}무적 {green}On");
+			god[user] = true;
+		}
+		else if(StrEqual(arg2, "off"))
+		{
+			SetGod(user, false);
+			CPrintToChat(user, "{white}무적 {green}Off");
+			god[user] = false;
+		}
+		
+		if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용합니다.", user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Stun(client, args)
+{
+	if(args != 3)
+	{
+		ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64], String:arg2[64], String:arg3[256];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	GetCmdArg(3, arg3, sizeof(arg3));
+	
+	if(StrEqual(arg3, "")) Format(arg3, 256, " ");
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		TF2_StunPlayer(user, StringToFloat(arg2), _, TF_STUNFLAGS_NORMALBONK);
+		CPrintToChat(user, "{green}%N님 {green}스턴 %i초 {white}%s", user, StringToInt(arg2), arg3);
+		
+		if(user != client) CPrintToChat(client, "{white}%N님이 {green}스턴{white}을 받았습니다.", user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Health(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_health <player> <amount>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64], String:arg2[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	new health = StringToInt(arg2);
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		new Gethp = GetClientHealth(client);
+		SetHealth(user, Gethp, health);
+		if(user != client) CPrintToChat(client, "{white}%N님은 {green}체력{white}이 증가되거나 감소되었습니다.", user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Class(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_class <player> <1 ~ 9>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64], String:arg2[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	
+	new TFClassType:class;
+	
+	if(StrEqual(arg2, "1", false)) class = TFClass_Scout;
+	else if(StrEqual(arg2, "2", false)) class = TFClass_Soldier;
+	else if(StrEqual(arg2, "3", false)) class = TFClass_Pyro;
+	else if(StrEqual(arg2, "4", false)) class = TFClass_DemoMan;
+	else if(StrEqual(arg2, "5", false)) class = TFClass_Heavy;
+	else if(StrEqual(arg2, "6", false)) class = TFClass_Engineer;
+	else if(StrEqual(arg2, "7", false)) class = TFClass_Medic;
+	else if(StrEqual(arg2, "8", false)) class = TFClass_Sniper;
+	else if(StrEqual(arg2, "9", false)) class = TFClass_Spy;
+	else
+	{
+		ReplyToCommand(client, "[SM] Invalid Class (\"%s\")", arg2);
+		return Plugin_Handled;
+	}
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		decl Float:pos[3];
+		GetClientAbsOrigin(user, pos);
+		
+		TF2_SetPlayerClass(user, class);
+		TF2_RespawnPlayer(user);
+		
+		TeleportEntity(user, pos, NULL_VECTOR, NULL_VECTOR);
+		
+		if(user != client) CPrintToChat(client, "{white}%N님의 {green}클래스{white}가 변경되었습니다.", user);
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:Command_Team(client, args)
+{
+	if (args != 2) 
+	{
+		ReplyToCommand(client, "Usage: sm_team <player> <2,3>");
+		return Plugin_Handled;
+	}
+
+	decl String:arg[65];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	decl String:iTeam[6];
+	GetCmdArg(2, iTeam, sizeof(iTeam));
+	
+	new team = StringToInt(iTeam);
+	
+	if(team > 3)
+	{
+		ReplyToCommand(client, "\x03관전자팀은 1 레드팀은 2 | 블루팀은 3");
+		return Plugin_Handled;
+	}
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+		if(team == 1 || team == 0) ChangeClientTeam(user, 1);
+		else
+		{
+			if(!IsPlayerAlive(client)) ChangeClientTeam(user, team);
+			else ChangeClientTeamAlive(user, team);
+			
+			CPrintToChat(user, "{green}%N{white}님의 팀이 변경되었습니다.", user);
+			if(user != client) CPrintToChat(client, "{white}%N님의 {green}팀{white}을 변경하였습니다.", user);
+		}
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:Command_Scramble(client, args)
+{
+	ServerCommand("mp_scrambleteams 1");
+	ReplyToCommand(client, "\x04팀을 섞습니다.");
+	return Plugin_Handled;
+}
+
+public Action:Command_Respawn(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_respawn <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+		TF2_RespawnPlayer(user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Players(client, args)
+{
+	new Handle:menu = CreateMenu(Menu_PlayersList);
+	SetMenuTitle(menu, "플레이어 목록");
+	for(new i=1; i<=GetMaxClients(); i++)
+	{
+		if(IsValidClient(i) && !IsFakeClient(i))
+		{
+			decl String:info[8], String:display[100];
+			Format(info, sizeof(info), "%i", i);
+			
+			if(IsClientAdmin(i)) Format(display, sizeof(display), "[어드민] %N", i);
+			else Format(display, sizeof(display), "%N", i);
+			AddMenuItem(menu, info, display);
+		}
+	}
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 60);
+	return Plugin_Handled;
+}
+
+public Action:Player_Profile(client, user)
+{
+	decl String:SteamID[32];
+	GetClientAuthId(user, AuthId_Steam2, SteamID, sizeof(SteamID));
+	
+	new Handle:info = CreateMenu(Menu_PlayersList);
+
+	SetMenuTitle(info, "%N", user);
+	
+	AddMenuItem(info, "1", SteamID, ITEMDRAW_DISABLED); 
+
+	new String:temp[32];
+	Format(temp, sizeof(temp), "profile_%i", user);
+	
+	AddMenuItem(info, temp, "프로필");  
+	
+	SetMenuExitButton(info, true);
+
+	DisplayMenu(info, client, 60);
+} 
+
+public Menu_PlayersList(Handle:menu, MenuAction:action, client, select)
+{
+	if(action == MenuAction_Select)
+	{
+		decl String:info[100], String:Steam64[32], String:aa[2][64]; new String:url[256];
+		GetMenuItem(menu, select, info, sizeof(info))
+		ExplodeString(info, "_", aa,2,64);
+
+		if(StrEqual(aa[0], "profile")) 
+		{
+			new user = StringToInt(aa[1])
+			GetClientAuthId(user, AuthId_SteamID64, Steam64, sizeof(Steam64));
+			Format(url, sizeof(url), "http://steamcommunity.com/profiles/%s", Steam64);
+			// PrintToChat(client, "%s", url);
+			motd(client, url);
+		}
+		else 
+		{
+			new user = StringToInt(info);
+			Player_Profile(client, user);
+		}
+	}
+	else if(action == MenuAction_End) CloseHandle(menu);
+}
+
+public Action:Command_Addcond(client, args)
+{
+	if(args != 3)
+	{
+		ReplyToCommand(client, "Usage: sm_cond <player> <condid> <duration>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:strCond[64], String:strDur[10];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, strCond, sizeof(strCond));
+	GetCmdArg(3, strDur, sizeof(strDur));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+
+		new Float:duration = StringToFloat(strDur);
+		new cond = StringToInt(strCond);
+		
+		TF2_AddCondition(user, TFCond:cond, duration);
+		if(user != client) CPrintToChat(client, "{white}%N님은 {green}치트{white}를 사용합니다.", user);
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action:Command_Restart(client, args)
+{
+	ServerCommand("mp_restartgame 1");
+	ReplyToCommand(client, "\x04라운드를 다시 시작합니다.");
+	return Plugin_Handled;
+}
+
+public Action:Command_Rof(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_rof <player> <amount>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		rof[user] = StringToFloat(amount);
+		CPrintToChat(user, "{white} 공속 %.1f", rof[user]);
+		if(user != client) CPrintToChat(client, "{white}%N님의 {green}공속{white}이 변경되었습니다.", user);
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_SeeYou(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_seeyou <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+
+		see[client] = user;
+		CPrintToChat(client, "{white}재장전 키로 관찰합니다.");
+		CPrintToChat(user, "{white}누군가 당신을 보고 있습니다.");
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action:Command_Jump(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_jump <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "on"))
+		{
+			jump[user] = true;
+			CPrintToChat(user, "{white}점프 모드 {green}On");
+			SetGod(user, true);
+		}
+		else if(StrEqual(amount, "off"))
+		{
+			jump[user] = false;
+			CPrintToChat(user, "{white}점프 모드 {green}Off");
+			SetGod(user, false);
+		}
+		
+		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} On", user);
+	}
+	
+	return Plugin_Handled;
+}
+public Action:Command_BotJump(client, args)
+{
+	for(new i = 1; i <= MaxClients; i++) if(IsClientInGame(i) && IsFakeClient(i)) bjump[i] = true;
+	CPrintToChat(client, "{white}봇 점프 모드 {green}On");
+	return Plugin_Handled;
+}
+
+public Action:Command_AddBot(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_bot <0 ~ 32>");
+		return Plugin_Handled;
+	}
+	
+	decl String:szTarget[10];
+	GetCmdArg(1, szTarget, sizeof(szTarget));
+	
+	ServerCommand("tf_bot_quota %d", StringToInt(szTarget));
+	return Plugin_Handled;
+}
+
+public Action:Command_Party(client, args)
+{
+	if(args != 1)
+	{
+		ReplyToCommand(client, "Usage: sm_party <name>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[10];
+	GetCmdArg(1, arg, sizeof(arg));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+		
+		if(!party[user])
+		{
+			party[user] = true;
+			CPrintToChat(user, "{white}파티에 참가하였습니다.");
+		}
+		else
+		{
+			party[user] = false;
+			CPrintToChat(user,  "{white}파티에서 나갔습니다.");
+		}
+		if(user != client)
+		{
+			if(!party[user]) CPrintToChat(client, "{white}%N님이 파티에서 나갔습니다.", user);
+			else CPrintToChat(client, "{white}%N님이 파티에 참가하였습니다.", user);
+		}
+	}
+	return Plugin_Handled;
+} 
+
+public Action:Command_Pos(client, args)
+{
+	if(!IsPlayerAlive(client))
+	{
+		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		return Plugin_Handled;
+	}
+	
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
+		return Plugin_Handled;
+	}
+	
+	
+	decl String:szMsg[256], String:szLife[10];
+	GetCmdArg(1, szMsg, sizeof(szMsg));
+	GetCmdArg(2, szLife, sizeof(szLife)); 
+	
+	new Float:endPos[3];
+	GetCollisionPoint(client, endPos);
+	
+	for(new i = 1; i <= MaxClients; i++)
+	{
+		if(IsValidClient(i))
+		{
+			Annotate(endPos, i, szMsg, 1, StringToFloat(szLife), -1);
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
+{
+	new index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+	if(IsValidEntity(weapon) && IsValidClient(client))
+	{
+		if(jump[client] || bjump[client])
+		{
+			if(TF2_GetPlayerClass(client) == TFClassType:TFClass_Soldier || TF2_GetPlayerClass(client) == TFClassType:TFClass_DemoMan)
+			{
+				if(index != 730) SetEntProp(weapon, Prop_Send, "m_iClip1", 5);
+			}
+			else if(TF2_GetPlayerClass(client) == TFClassType:TFClass_Engineer) SetEntProp(client, Prop_Data, "m_iAmmo", 999, 4, 3);
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action:OnPlayerRunCmd(client, &iButtons, &iImpulse, Float:fVel[3], Float:fAng[3], &iWeapon)
+{
+	if(IsValidClient(client) && IsPlayerAlive(client))
+	{
+		new weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+		if(weapon == INVALID_ENT_REFERENCE) return Plugin_Continue;
+		
+		if(rof[client] != 0.0) ModRateOfFire(weapon, rof[client]);	
+		
+		if(see[client])
+		{
+			if(iButtons & IN_RELOAD && !seeb[client])
+			{
+				SetVariantInt(3);
+				AcceptEntityInput(client, "SetForcedTauntCam");
+				SetClientViewEntity(client, see[client]);
+				seeb[client] = true;
+			}
+			else if (!(iButtons & IN_RELOAD) && seeb[client])
+			{
+				SetClientViewEntity(client, client);
+				seeb[client] = false;
+			}
+		}
+	}
+	return Plugin_Continue;
+}
+
+stock ChangeClientTeamAlive(client, team){
+	SetEntProp(client, Prop_Send, "m_lifeState", 2);
+	ChangeClientTeam(client, team);
+	SetEntProp(client, Prop_Send, "m_lifeState", 0);
+}
+
+stock SetGod(client, bool:num = true)
+{
+	if(num) SetEntProp(client, Prop_Data, "m_takedamage", 1, 1);
+	else SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
+}
+
+stock SetHealth(client, Gethp, sethp)
+{
+	SetEntityHealth(client, sethp);
+	if(Gethp < sethp) CPrintToChat(client, "{green}체력 %i {white}증가", sethp);
+	else CPrintToChat(client, "{green}체력 %i {white}감소", sethp);
+}
+
+stock ModRateOfFire(iWeapon, Float:Amount)
+{
+	new Float:m_flNextPrimaryAttack = GetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack");
+	new Float:m_flNextSecondaryAttack = GetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack");
+	
+	if (Amount > 12) SetEntPropFloat(iWeapon, Prop_Send, "m_flPlaybackRate", 12.0);
+	else SetEntPropFloat(iWeapon, Prop_Send, "m_flPlaybackRate", Amount);
+
+	new Float:fGameTime = GetGameTime();
+	new Float:fPrimaryTime = (m_flNextPrimaryAttack - fGameTime) - ((Amount - 1.0) / 50);
+	new Float:fSecondaryTime = (m_flNextSecondaryAttack - fGameTime) - ((Amount - 1.0) / 50);
+
+	SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", fPrimaryTime + fGameTime);
+	SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", fSecondaryTime + fGameTime);
+}
+
+public motd(client, String:url[])
+{
+	new Handle:Kv = CreateKeyValues("motd");
+	KvSetString(Kv, "title", "Profile");
+	KvSetNum(Kv, "type", MOTDPANEL_TYPE_URL);
+	KvSetString(Kv, "msg", url);
+	KvSetNum(Kv, "customsvr", 1);
+
+	ShowVGUIPanel(client, "info", Kv);
+	CloseHandle(Kv);
+}
+
+stock Annotate(Float:pos[3], client, String:message[], offset = 0, Float:lifetime = 8.0, follow = -1)
+{
+	new Handle:event = CreateEvent("show_annotation");
+	if (event == INVALID_HANDLE) return;
+	
+	SetEventFloat(event, "worldPosX", pos[0]);
+	SetEventFloat(event, "worldPosY", pos[1]);
+	SetEventFloat(event, "worldPosZ", pos[2]);
+	SetEventFloat(event, "lifetime", lifetime);
+	SetEventInt(event, "id", client + 8720 + offset); 
+	if (follow != -1) SetEventInt(event, "follow_entindex", follow);
+	SetEventString(event, "text", message);
+	SetEventString(event, "play_sound", "vo/null.wav");
+	SetEventString(event, "show_effect", "1");
+	SetEventString(event, "show_distance", "1");
+	SetEventInt(event, "visibilityBitfield", 1 << client);
+	FireEvent(event);
+}
+
+public bool:admin(const String:pattern[], Handle:clients)
+{
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsClientAdmin(i)) PushArrayCell(clients, i)
+	return true;
+}
+
+public bool:member(const String:pattern[], Handle:clients)
+{
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && party[i] == true) PushArrayCell(clients, i)
+	return true;
+}
+
+public bool:redbots(const String:pattern[], Handle:clients)
+{
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 2) PushArrayCell(clients, i) 
+	return true;
+}
+
+public bool:blubots(const String:pattern[], Handle:clients)
+{
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 3) PushArrayCell(clients, i)
+	return true;
+}
+
+stock bool:IsValidClient(client)
+{
+	if(client <= 0 ) return false;
+	if(client > MaxClients) return false;
+	if(!IsClientConnected(client)) return false;
+	return IsClientInGame(client);
+}
+
+stock bool:IsClientAdmin(client)
+{
+	new AdminId:Cl_ID;
+	Cl_ID = GetUserAdmin(client);
+	if(Cl_ID != INVALID_ADMIN_ID)
+		return true;
+	return false;
+}
