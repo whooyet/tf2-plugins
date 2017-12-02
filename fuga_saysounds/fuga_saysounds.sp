@@ -1,5 +1,6 @@
 #include <sdktools>
 #include <morecolors>
+#include <soundlib>
 
 #define MAX 99
 
@@ -7,7 +8,6 @@ enum Sound_enum
 {
 	String:SaySound[256],
 	String:SayFile[256],
-	String:SaySoundTime[64],
 	String:SaySoundTitle[256],
 	SayOverLap,
 	SayAdmin,
@@ -76,7 +76,7 @@ public Action:OnPlayerRunCmd(client, &buttons)
 				{
 					if(PlayerCheck(client) && !(buttons & IN_SCORE)) ShowSyncHudText(client, g_hHudSync, "song: %s", Pucca[i][SaySoundTitle]);
 				}
-				new Float:time = Convert_Time(Pucca[i][SaySoundTime]);
+				new Float:time = FileSecond(Pucca[i][SayFile]);
 				new Float:current_time = GetEngineTime() - CheckTime[i];
 
 				if(time <= current_time)
@@ -92,17 +92,17 @@ public Action:OnPlayerRunCmd(client, &buttons)
 
 public Action:Say(client, String:command[], argc)
 {
-	if(CheckSoundCoolTime(client, 3.0))
-	{
-		decl String:text[256];
-		GetCmdArgString(text, sizeof(text));
-		StripQuotes(text);
+	decl String:text[256];
+	GetCmdArgString(text, sizeof(text));
+	StripQuotes(text);
 		
-		for(new i = 0; i < MAX; i++)
+	for(new i = 0; i < MAX; i++)
+	{
+		if(Pucca[i][MAX_Config] == MAX)
 		{
-			if(Pucca[i][MAX_Config] == MAX)
+			if(StrEqual(text, Pucca[i][SaySound]))
 			{
-				if(StrEqual(text, Pucca[i][SaySound]))
+				if(CheckSoundCoolTime(client, 3.0))
 				{
 					if(acv() && Pucca[i][SayOverLap] == 1)
 					{
@@ -124,10 +124,10 @@ public Action:Say(client, String:command[], argc)
 					SaySoundDelay[client] = GetEngineTime();
 					return Plugin_Handled;
 				}
+				else PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
 			}
 		}
 	}
-	else PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
 	return Plugin_Continue;
 }
 
@@ -174,8 +174,19 @@ public Action:SoundMenu(client)
 	{
 		if(Pucca[i][MAX_Config] == MAX)
 		{
-			IntToString(i, temp, sizeof(temp));
-			AddMenuItem(menu, temp, Pucca[i][SaySound]);  
+			if(!IsClientAdmin(client))
+			{
+				if(Pucca[i][SayAdmin] == 0)
+				{
+					IntToString(i, temp, sizeof(temp));
+					AddMenuItem(menu, temp, Pucca[i][SaySound]);
+				}
+			}
+			else
+			{
+				IntToString(i, temp, sizeof(temp));
+				AddMenuItem(menu, temp, Pucca[i][SaySound]);
+			}
 		}
 	} 
 	SetMenuExitButton(menu, true);
@@ -232,7 +243,7 @@ stock acv()
 
 bool:SoundConfig()
 {
-	decl String:strPath[192];
+	decl String:strPath[192], String:strSection[15];
 	BuildPath(Path_SM, strPath, sizeof(strPath), "configs/fuga_saysounds.cfg");
 	
 	if(!FileExists(strPath))
@@ -244,7 +255,6 @@ bool:SoundConfig()
 	new Handle:hKv = CreateKeyValues("sound");
 	if(FileToKeyValues(hKv, strPath) && KvGotoFirstSubKey(hKv))
 	{
-		decl String:strSection[15];
 		do
 		{
 			KvGetSectionName(hKv, strSection, sizeof(strSection));
@@ -257,7 +267,7 @@ bool:SoundConfig()
 			
 			KvGetString(hKv, "say", Pucca[num][SaySound], 256);
 			KvGetString(hKv, "file", Pucca[num][SayFile], 256);
-			KvGetString(hKv, "time", Pucca[num][SaySoundTime], 64, "0:0");
+			// KvGetString(hKv, "time", Pucca[num][SaySoundTime], 64, "0:0");
 			KvGetString(hKv, "title", Pucca[num][SaySoundTitle], 256, "제목 없음");
 			Pucca[num][SayAdmin] = KvGetNum(hKv, "admin");
 			Pucca[num][SayOverLap] = KvGetNum(hKv, "overlap");
@@ -279,6 +289,17 @@ stock Float:Convert_Time(const String:buffer[])
 	new pos = SplitString(buffer, ":", part, sizeof(part));
 	if (pos == -1) return StringToFloat(buffer);
 	else return (StringToFloat(part)*60.0) + StringToFloat(buffer[pos]);
+}
+
+stock Float:FileSecond(String:File2[])
+{
+	new Handle:h_Soundfile = INVALID_HANDLE;
+	h_Soundfile = OpenSoundFile(File2, true);
+	
+	new Float:timebuf;
+	if(h_Soundfile != INVALID_HANDLE) timebuf = GetSoundLengthFloat(h_Soundfile);
+	CloseHandle(h_Soundfile);
+	return timebuf;
 }
 
 stock bool:CheckSoundCoolTime(any:iClient, Float:fTime)
