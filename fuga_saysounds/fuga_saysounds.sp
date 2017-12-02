@@ -23,6 +23,13 @@ new Handle:g_hHudSync;
 
 new Float:SaySoundDelay[MAXPLAYERS+1];
 
+new Handle:SayX = INVALID_HANDLE;
+new Handle:SayY = INVALID_HANDLE;
+new Handle:SayR = INVALID_HANDLE;
+new Handle:SayG = INVALID_HANDLE;
+new Handle:SayB = INVALID_HANDLE;
+new Handle:SayA = INVALID_HANDLE;
+
 public Plugin myinfo = 
 {
 	name = "덜덜 SaySounds",
@@ -43,8 +50,14 @@ public OnPluginStart()
 	RegAdminCmd("sm_allstop", SayAllStop, ADMFLAG_KICK);
 	RegAdminCmd("sm_saylist", SaySoundList, 0);
 	
+	SayX = CreateConVar("sm_saysounds_x", "0.75", "Hud x");
+	SayY = CreateConVar("sm_saysounds_y", "0.17", "Hud Y");
+	SayR = CreateConVar("sm_saysounds_r", "0", "Hud R");
+	SayG = CreateConVar("sm_saysounds_g", "153", "Hud G");
+	SayB = CreateConVar("sm_saysounds_b", "51", "Hud B");
+	SayA = CreateConVar("sm_saysounds_a", "150", "Hud A");
+	
 	g_hHudSync = CreateHudSynchronizer();
-	SetHudTextParams(0.75, 0.17, 0.1, 0, 153, 51, 150, 0, 0.0, 0.0, 0.0);
 }
 
 public OnMapStart()
@@ -66,6 +79,8 @@ public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
 public Action:OnPlayerRunCmd(client, &buttons) 
 {
+	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 1.0, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA), 0, 0.0, 0.0, 0.0);
+	
 	for(new i = 0; i < MAX; i++)
 	{
 		if(Pucca[i][MAX_Config] == MAX)
@@ -73,9 +88,8 @@ public Action:OnPlayerRunCmd(client, &buttons)
 			if(Pucca[i][SayCheck])
 			{
 				if(Pucca[i][SayOverLap] == 1 && CheckSoundOverLap == i)
-				{
 					if(PlayerCheck(client) && !(buttons & IN_SCORE)) ShowSyncHudText(client, g_hHudSync, "song: %s", Pucca[i][SaySoundTitle]);
-				}
+					
 				new Float:time = FileSecond(Pucca[i][SayFile]);
 				new Float:current_time = GetEngineTime() - CheckTime[i];
 
