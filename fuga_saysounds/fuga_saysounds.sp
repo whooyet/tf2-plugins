@@ -35,7 +35,7 @@ public Plugin myinfo =
 	name = "덜덜 SaySounds",
 	author = "뿌까",
 	description = "하하하하",
-	version = "1.0",
+	version = "2.0",
 	url = "x"
 };
 
@@ -79,7 +79,7 @@ public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
 public Action:OnPlayerRunCmd(client, &buttons) 
 {
-	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 1.0, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA), 0, 0.0, 0.0, 0.0);
+	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.1, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA), 0, 0.0, 0.0, 0.0);
 	
 	for(new i = 0; i < MAX; i++)
 	{
@@ -88,13 +88,20 @@ public Action:OnPlayerRunCmd(client, &buttons)
 			if(Pucca[i][SayCheck])
 			{
 				if(Pucca[i][SayOverLap] == 1 && CheckSoundOverLap == i)
-					if(PlayerCheck(client) && !(buttons & IN_SCORE)) ShowSyncHudText(client, g_hHudSync, "song: %s", Pucca[i][SaySoundTitle]);
+				{
+					if(PlayerCheck(client))
+					{
+						if(buttons & IN_SCORE) ClearSyncHud(client, g_hHudSync);
+						else ShowSyncHudText(client, g_hHudSync, "song: %s", Pucca[i][SaySoundTitle]);
+					}
+				}
 					
 				new Float:time = FileSecond(Pucca[i][SayFile]);
 				new Float:current_time = GetEngineTime() - CheckTime[i];
 
 				if(time <= current_time)
 				{
+					ClearSyncHud(client, g_hHudSync);
 					if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
 					Pucca[i][SayCheck] = false;
 					CheckTime[i] = 0.0;
@@ -109,7 +116,11 @@ public Action:Say(client, String:command[], argc)
 	decl String:text[256];
 	GetCmdArgString(text, sizeof(text));
 	StripQuotes(text);
-		
+	
+	new bool:a;
+	if(acv()) a = true;
+	else a = false;
+
 	for(new i = 0; i < MAX; i++)
 	{
 		if(Pucca[i][MAX_Config] == MAX)
@@ -118,7 +129,7 @@ public Action:Say(client, String:command[], argc)
 			{
 				if(CheckSoundCoolTime(client, 3.0))
 				{
-					if(acv() && Pucca[i][SayOverLap] == 1)
+					if(a && Pucca[i][SayOverLap] == 1)
 					{
 						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
 						return Plugin_Handled;
@@ -132,9 +143,9 @@ public Action:Say(client, String:command[], argc)
 					if(Pucca[i][SayOverLap] == 1) CheckSoundOverLap = i;
 					
 					CheckTime[i] = GetEngineTime();
-					EmitSoundToAll(Pucca[i][SayFile]);
+					EmitSoundToAll(Pucca[i][SayFile], _, _, _, _, 1.0);
 					Pucca[i][SayCheck] = true;
-					CPrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x03%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[i][SaySound]);
+					PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[i][SaySound]);
 					SaySoundDelay[client] = GetEngineTime();
 					return Plugin_Handled;
 				}
@@ -160,13 +171,20 @@ public Action:SayAllStop(client, args)
 		{
 			if(Pucca[i][SayCheck])
 			{
-				for(new all = 1; all <= MaxClients; all++) if(PlayerCheck(all)) StopSound(all, SNDCHAN_AUTO, Pucca[i][SayFile]);
+				for(new all = 1; all <= MaxClients; all++)
+				{
+					if(PlayerCheck(all))
+					{
+						StopSound(all, SNDCHAN_AUTO, Pucca[i][SayFile]);
+						ClearSyncHud(all, g_hHudSync);
+					}
+				}
 				Pucca[i][SayCheck] = false;
 				if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
 			}
 		}
 	}
-	CPrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x03%N\x07FFFFFF 님이 노래를 껏습니다.", client);
+	PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 노래를 껏습니다.", client);
 	return Plugin_Handled;
 }
 
@@ -217,12 +235,15 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 			GetMenuItem(menu, select, info, sizeof(info));
 			
 			new j = StringToInt(info);
+			new bool:a;
+			if(acv()) a = true;
+			else a = false;
 			
 			for(new i = 0; i < MAX; i++)
 			{
 				if(Pucca[i][MAX_Config] == MAX)
 				{
-					if(acv() && Pucca[j][SayOverLap] == 1)
+					if(a && Pucca[j][SayOverLap] == 1)
 					{
 						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
 						return;
@@ -238,7 +259,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 					CheckTime[j] = GetEngineTime();
 					EmitSoundToAll(Pucca[j][SayFile]);
 					Pucca[j][SayCheck] = true;
-					CPrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x03%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[j][SaySound]);
+					PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[j][SaySound]);
 					SaySoundDelay[client] = GetEngineTime();
 					return;
 				}
