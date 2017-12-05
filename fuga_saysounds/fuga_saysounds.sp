@@ -19,6 +19,15 @@ new Handle:SayG = INVALID_HANDLE;
 new Handle:SayB = INVALID_HANDLE;
 new Handle:SayA = INVALID_HANDLE;
 
+public Plugin myinfo = 
+{
+	name = "덜덜 SaySounds",
+	author = "뿌까",
+	description = "하하하하",
+	version = "3.0",
+	url = "x"
+};
+
 public OnPluginStart()
 {
 	SoundConfig();
@@ -55,7 +64,7 @@ public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
 public Action:OnPlayerRunCmd(client, &buttons) 
 {
-	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.1, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA));
+	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.3, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA));
 	
 	decl String:SayFile[256], String:SayTitle[256], overlap;
 	for(new i = 0 ; i < MaxItem ; i++)
@@ -67,26 +76,30 @@ public Action:OnPlayerRunCmd(client, &buttons)
 			overlap = GetArrayCell(kv[i], 4);
 		}
 		if(SayCheck[i])
-		{
-			if(overlap && CheckSoundOverLap == i)
+		{ 
+			if(overlap == 1 && CheckSoundOverLap == i)
 			{
 				if(PlayerCheck(client))
 				{
 					if(buttons & IN_SCORE) ClearSyncHud(client, g_hHudSync);
-					else ShowSyncHudText(client, g_hHudSync, "song: %s", SayTitle);
+					else 
+					{
+						ClearSyncHud(client, g_hHudSync);
+						ShowSyncHudText(client, g_hHudSync, "song: %s", SayTitle);
+					}
 				}
 			}
-		}
 					
-		new Float:time = FileSecond(SayFile);
-		new Float:current_time = GetEngineTime() - CheckTime[i];
+			new Float:time = FileSecond(SayFile);
+			new Float:current_time = GetEngineTime() - CheckTime[i];
 
-		if(time <= current_time)
-		{
-			ClearSyncHud(client, g_hHudSync);
-			if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
-			SayCheck[i] = false;
-			CheckTime[i] = 0.0;
+			if(time <= current_time)
+			{
+				ClearSyncHud(client, g_hHudSync);
+				if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
+				SayCheck[i] = false;
+				CheckTime[i] = 0.0;
+			}
 		}
 	}
 }
@@ -97,13 +110,14 @@ public Action:Say(client, String:command[], argc)
 	GetCmdArgString(text, sizeof(text));
 	StripQuotes(text);
 	
-	decl String:SayName[256], String:SayFile[256], admin, overlap;
+	decl String:SayName[256], String:SayFile[256], String:SayTitle[256], admin, overlap;
 	for(new i = 0 ; i < MaxItem ; i++)
 	{
 		if(kv[i] != INVALID_HANDLE)
 		{
 			GetArrayString(kv[i], 0, SayName, sizeof(SayName));
 			GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+			GetArrayString(kv[i], 2, SayTitle, sizeof(SayTitle));
 			admin = GetArrayCell(kv[i], 3);
 			overlap = GetArrayCell(kv[i], 4);
 		}
@@ -115,6 +129,13 @@ public Action:Say(client, String:command[], argc)
 				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
 				return Plugin_Handled;
 			}
+			
+			if(admin == 1  && !IsClientAdmin(client))
+			{
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+				return Plugin_Handled;	
+			}
+			
 			if(overlap == 1)
 			{
 				if(acv())
@@ -123,12 +144,6 @@ public Action:Say(client, String:command[], argc)
 					return Plugin_Handled;
 				}
 				else CheckSoundOverLap = i;
-			}
-				
-			if(admin == 1  && !IsClientAdmin(client))
-			{
-				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
-				return Plugin_Handled;	
 			}
 
 			EmitSoundToAll(SayFile);
@@ -245,6 +260,13 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 			overlap = GetArrayCell(kv[i], 4);
 		}
 		
+		if(admin == 1  && !IsClientAdmin(client))
+		{
+			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+			return;	
+		}
+
+		
 		if(overlap == 1)
 		{
 			if(acv())
@@ -253,12 +275,6 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 				return;
 			}
 			else CheckSoundOverLap = i;
-		}
-				
-		if(admin == 1  && !IsClientAdmin(client))
-		{
-			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
-			return;	
 		}
 
 		EmitSoundToAll(SayFile);
