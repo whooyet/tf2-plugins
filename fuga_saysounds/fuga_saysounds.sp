@@ -30,7 +30,6 @@ public Plugin myinfo =
 
 public OnPluginStart()
 {
-	SoundConfig();
 	AddCommandListener(Say, "say");
 	
 	RegConsoleCmd("sm_stop", SayStop);
