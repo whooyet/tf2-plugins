@@ -2,27 +2,16 @@
 #include <morecolors>
 #include <soundlib>
 
-#define MAX 99
+new Handle:kv[500] = {INVALID_HANDLE, ...};
+new MaxItem;
 
-enum Sound_enum
-{
-	String:SaySound[256],
-	String:SayFile[256],
-	String:SaySoundTitle[256],
-	SayOverLap,
-	SayAdmin,
-	bool:SayCheck,
-	MAX_Config
-};
-
-new Pucca[MAX][Sound_enum];
-new Float:CheckTime[MAX];
 new CheckSoundOverLap;
+new bool:SayCheck[99];
 
-new Handle:g_hHudSync;
-
+new Float:CheckTime[99];
 new Float:SaySoundDelay[MAXPLAYERS+1];
 
+new Handle:g_hHudSync = INVALID_HANDLE;
 new Handle:SayX = INVALID_HANDLE;
 new Handle:SayY = INVALID_HANDLE;
 new Handle:SayR = INVALID_HANDLE;
@@ -30,22 +19,11 @@ new Handle:SayG = INVALID_HANDLE;
 new Handle:SayB = INVALID_HANDLE;
 new Handle:SayA = INVALID_HANDLE;
 
-public Plugin myinfo = 
-{
-	name = "덜덜 SaySounds",
-	author = "뿌까",
-	description = "하하하하",
-	version = "2.0",
-	url = "x"
-};
-
 public OnPluginStart()
 {
-	if(!SoundConfig()) return;
-	for(new i = 0; i < MAX; i++) CheckTime[i] = 0.0;
-	CheckSoundOverLap = -1;
-	
+	SoundConfig();
 	AddCommandListener(Say, "say");
+	
 	RegConsoleCmd("sm_stop", SayStop);
 	RegAdminCmd("sm_allstop", SayAllStop, ADMFLAG_KICK);
 	RegAdminCmd("sm_saylist", SaySoundList, 0);
@@ -56,57 +34,59 @@ public OnPluginStart()
 	SayG = CreateConVar("sm_saysounds_g", "153", "Hud G");
 	SayB = CreateConVar("sm_saysounds_b", "51", "Hud B");
 	SayA = CreateConVar("sm_saysounds_a", "150", "Hud A");
-	
 	g_hHudSync = CreateHudSynchronizer();
 }
 
 public OnMapStart()
 {
-	if(!SoundConfig()) return;
-	new String:temp[256];
-	for(new i = 0; i < MAX; i++)
+	SoundConfig();
+	new String:temp[256]; decl String:SayFile[256];
+	for(new i = 0 ; i < MaxItem ; i++)
 	{
-		if(Pucca[i][MAX_Config] == MAX)
-		{
-			Format(temp, sizeof(temp), "sound/%s", Pucca[i][SayFile]);
-			PrecacheSound(Pucca[i][SayFile], true);
-			AddFileToDownloadsTable(temp);
-		}
+		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+		Format(temp, sizeof(temp), "sound/%s", SayFile);
+		PrecacheSound(SayFile, true);
+		AddFileToDownloadsTable(temp);
 	}
 }
 
+public OnMapEnd() for(new i = 0 ; i < 500 && i < MaxItem; i++) if(kv[i] != INVALID_HANDLE) CloseHandle(kv[i]);
 public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
 public Action:OnPlayerRunCmd(client, &buttons) 
 {
-	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.1, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA), 0, 0.0, 0.0, 0.0);
+	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.1, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA));
 	
-	for(new i = 0; i < MAX; i++)
+	decl String:SayFile[256], String:SayTitle[256], overlap;
+	for(new i = 0 ; i < MaxItem ; i++)
 	{
-		if(Pucca[i][MAX_Config] == MAX)
+		if(kv[i] != INVALID_HANDLE)
 		{
-			if(Pucca[i][SayCheck])
+			GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+			GetArrayString(kv[i], 2, SayTitle, sizeof(SayTitle));
+			overlap = GetArrayCell(kv[i], 4);
+		}
+		if(SayCheck[i])
+		{
+			if(overlap && CheckSoundOverLap == i)
 			{
-				if(Pucca[i][SayOverLap] == 1 && CheckSoundOverLap == i)
+				if(PlayerCheck(client))
 				{
-					if(PlayerCheck(client))
-					{
-						if(buttons & IN_SCORE) ClearSyncHud(client, g_hHudSync);
-						else ShowSyncHudText(client, g_hHudSync, "song: %s", Pucca[i][SaySoundTitle]);
-					}
-				}
-					
-				new Float:time = FileSecond(Pucca[i][SayFile]);
-				new Float:current_time = GetEngineTime() - CheckTime[i];
-
-				if(time <= current_time)
-				{
-					ClearSyncHud(client, g_hHudSync);
-					if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
-					Pucca[i][SayCheck] = false;
-					CheckTime[i] = 0.0;
+					if(buttons & IN_SCORE) ClearSyncHud(client, g_hHudSync);
+					else ShowSyncHudText(client, g_hHudSync, "song: %s", SayTitle);
 				}
 			}
+		}
+					
+		new Float:time = FileSecond(SayFile);
+		new Float:current_time = GetEngineTime() - CheckTime[i];
+
+		if(time <= current_time)
+		{
+			ClearSyncHud(client, g_hHudSync);
+			if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
+			SayCheck[i] = false;
+			CheckTime[i] = 0.0;
 		}
 	}
 }
@@ -117,40 +97,47 @@ public Action:Say(client, String:command[], argc)
 	GetCmdArgString(text, sizeof(text));
 	StripQuotes(text);
 	
-	new bool:a;
-	if(acv()) a = true;
-	else a = false;
-
-	for(new i = 0; i < MAX; i++)
+	decl String:SayName[256], String:SayFile[256], admin, overlap;
+	for(new i = 0 ; i < MaxItem ; i++)
 	{
-		if(Pucca[i][MAX_Config] == MAX)
+		if(kv[i] != INVALID_HANDLE)
 		{
-			if(StrEqual(text, Pucca[i][SaySound]))
+			GetArrayString(kv[i], 0, SayName, sizeof(SayName));
+			GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+			admin = GetArrayCell(kv[i], 3);
+			overlap = GetArrayCell(kv[i], 4);
+		}
+		
+		if(StrEqual(text, SayName))
+		{
+			if(!CheckSoundCoolTime(client, 3.0))
 			{
-				if(CheckSoundCoolTime(client, 3.0))
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+				return Plugin_Handled;
+			}
+			if(overlap == 1)
+			{
+				if(acv())
 				{
-					if(a && Pucca[i][SayOverLap] == 1)
-					{
-						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
-						return Plugin_Handled;
-					}
-					
-					if(Pucca[i][SayAdmin] == 1 && !IsClientAdmin(client))
-					{
-						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
-						return Plugin_Handled;	
-					}
-					if(Pucca[i][SayOverLap] == 1) CheckSoundOverLap = i;
-					
-					CheckTime[i] = GetEngineTime();
-					EmitSoundToAll(Pucca[i][SayFile], _, _, _, _, 1.0);
-					Pucca[i][SayCheck] = true;
-					PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[i][SaySound]);
-					SaySoundDelay[client] = GetEngineTime();
+					PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
 					return Plugin_Handled;
 				}
-				else PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+				else CheckSoundOverLap = i;
 			}
+				
+			if(admin == 1  && !IsClientAdmin(client))
+			{
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+				return Plugin_Handled;	
+			}
+
+			EmitSoundToAll(SayFile);
+			CheckTime[i] = GetEngineTime();
+			SaySoundDelay[client] = GetEngineTime();
+				
+			SayCheck[i] = true;
+			PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, SayName);
+			return Plugin_Handled;
 		}
 	}
 	return Plugin_Continue;
@@ -158,36 +145,43 @@ public Action:Say(client, String:command[], argc)
 
 public Action:SayStop(client, args)
 {
-	for(new i = 0; i < MAX; i++) if(Pucca[i][MAX_Config] == MAX) if(Pucca[i][SayCheck]) StopSound(client, SNDCHAN_AUTO, Pucca[i][SayFile]);
+	decl String:SayFile[256];
+	for(new i = 0 ; i < MaxItem ; i++)
+	{
+		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+		if(SayCheck[i])
+		{
+			StopSound(client, SNDCHAN_AUTO, SayFile);
+			SayCheck[i] = false;
+		}
+	}
 	PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04노래가 꺼졌습니다.");
 	return Plugin_Handled;
 }
 
 public Action:SayAllStop(client, args) 
 {
-	for(new i = 0; i < MAX; i++)
+	decl String:SayFile[256];
+	for(new i = 0 ; i < MaxItem ; i++)
 	{
-		if(Pucca[i][MAX_Config] == MAX)
+		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+		if(SayCheck[i])
 		{
-			if(Pucca[i][SayCheck])
+			for(new all = 1; all <= MaxClients; all++)
 			{
-				for(new all = 1; all <= MaxClients; all++)
+				if(PlayerCheck(all))
 				{
-					if(PlayerCheck(all))
-					{
-						StopSound(all, SNDCHAN_AUTO, Pucca[i][SayFile]);
-						ClearSyncHud(all, g_hHudSync);
-					}
+					StopSound(all, SNDCHAN_AUTO, SayFile);
+					ClearSyncHud(all, g_hHudSync);
 				}
-				Pucca[i][SayCheck] = false;
-				if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
 			}
+			SayCheck[i] = false;
+			if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
 		}
 	}
 	PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 노래를 껏습니다.", client);
 	return Plugin_Handled;
 }
-
 
 public Action:SaySoundList(client, args)
 {
@@ -201,24 +195,27 @@ public Action:SoundMenu(client)
 	SetMenuTitle(menu, "Sound List");
 	
 	new String:temp[10];
-	
-	for(new i = 0; i < MAX; i++)
+	decl String:SayName[256], admin;
+	for(new i = 0 ; i < MaxItem ; i++)
 	{
-		if(Pucca[i][MAX_Config] == MAX)
+		if(kv[i] != INVALID_HANDLE)
 		{
-			if(!IsClientAdmin(client))
-			{
-				if(Pucca[i][SayAdmin] == 0)
-				{
-					IntToString(i, temp, sizeof(temp));
-					AddMenuItem(menu, temp, Pucca[i][SaySound]);
-				}
-			}
-			else
+			GetArrayString(kv[i], 0, SayName, sizeof(SayName));
+			admin = GetArrayCell(kv[i], 3);
+		}
+		
+		if(!IsClientAdmin(client))
+		{
+			if(admin == 0)
 			{
 				IntToString(i, temp, sizeof(temp));
-				AddMenuItem(menu, temp, Pucca[i][SaySound]);
+				AddMenuItem(menu, temp, SayName);
 			}
+		}
+		else
+		{
+			IntToString(i, temp, sizeof(temp));
+			AddMenuItem(menu, temp, SayName);
 		}
 	} 
 	SetMenuExitButton(menu, true);
@@ -228,102 +225,97 @@ public Action:SoundMenu(client)
 public Sound_Select(Handle:menu, MenuAction:action, client, select)
 {
 	if(action == MenuAction_Select)
-	{ 
-		if(CheckSoundCoolTime(client, 3.0))
+	{
+		decl String:info[10], String:SayName[256], String:SayFile[256], admin, overlap;
+		GetMenuItem(menu, select, info, sizeof(info));
+		
+		new i = StringToInt(info);
+		
+		if(!CheckSoundCoolTime(client, 3.0))
 		{
-			decl String:info[10];
-			GetMenuItem(menu, select, info, sizeof(info));
-			
-			new j = StringToInt(info);
-			new bool:a;
-			if(acv()) a = true;
-			else a = false;
-			
-			for(new i = 0; i < MAX; i++)
-			{
-				if(Pucca[i][MAX_Config] == MAX)
-				{
-					if(a && Pucca[j][SayOverLap] == 1)
-					{
-						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
-						return;
-					}
-						
-					if(Pucca[j][SayAdmin] == 1 && !IsClientAdmin(client))
-					{
-						PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
-						return;	
-					}
-					if(Pucca[j][SayOverLap] == 1) CheckSoundOverLap = j;
-						
-					CheckTime[j] = GetEngineTime();
-					EmitSoundToAll(Pucca[j][SayFile]);
-					Pucca[j][SayCheck] = true;
-					PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, Pucca[j][SaySound]);
-					SaySoundDelay[client] = GetEngineTime();
-					return;
-				}
-			}
+			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+			return;
 		}
-		else PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+		
+		if(kv[i] != INVALID_HANDLE)
+		{
+			GetArrayString(kv[i], 0, SayName, sizeof(SayName));
+			GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+			admin = GetArrayCell(kv[i], 3);
+			overlap = GetArrayCell(kv[i], 4);
+		}
+		
+		if(overlap == 1)
+		{
+			if(acv())
+			{
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
+				return;
+			}
+			else CheckSoundOverLap = i;
+		}
+				
+		if(admin == 1  && !IsClientAdmin(client))
+		{
+			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+			return;	
+		}
+
+		EmitSoundToAll(SayFile);
+		CheckTime[i] = GetEngineTime();
+		SaySoundDelay[client] = GetEngineTime();
+				
+		SayCheck[i] = true;
+		PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, SayName);
+		return;
 	}
 	else if(action == MenuAction_End) CloseHandle(menu);
 }
 
-stock acv()
+stock SoundConfig()
 {
-	for(new i = 0; i < MAX; i++) if(Pucca[i][MAX_Config] == MAX) if(Pucca[i][SayCheck] && CheckSoundOverLap == i) return true;
-	return false;
-}
-
-bool:SoundConfig()
-{
-	decl String:strPath[192], String:strSection[15];
+	decl String:strPath[192], String:szBuffer[256];
 	BuildPath(Path_SM, strPath, sizeof(strPath), "configs/fuga_saysounds.cfg");
+	new count = 0;
 	
-	if(!FileExists(strPath))
-	{
-		SetFailState("Failed to find fuga_saysounds.cfg");
-		return false;
-	}
-	
-	new Handle:hKv = CreateKeyValues("sound");
-	if(FileToKeyValues(hKv, strPath) && KvGotoFirstSubKey(hKv))
+	new Handle:DB = CreateKeyValues("sounds");
+	FileToKeyValues(DB, strPath);
+
+	if(KvGotoFirstSubKey(DB))
 	{
 		do
 		{
-			KvGetSectionName(hKv, strSection, sizeof(strSection));
-			new num = StringToInt(strSection);
-			if(num < 0 || num >= sizeof(Pucca))
-			{
-				LogMessage("fuga_saysounds index: \"%s\" is not valid. Must be between 0 - %d. Edit the fuga_saysounds.cfg File", strSection, sizeof(Pucca));
-				continue;
-			}
+			kv[count] = CreateArray(540);
 			
-			KvGetString(hKv, "say", Pucca[num][SaySound], 256);
-			KvGetString(hKv, "file", Pucca[num][SayFile], 256);
-			// KvGetString(hKv, "time", Pucca[num][SaySoundTime], 64, "0:0");
-			KvGetString(hKv, "title", Pucca[num][SaySoundTitle], 256, "제목 없음");
-			Pucca[num][SayAdmin] = KvGetNum(hKv, "admin");
-			Pucca[num][SayOverLap] = KvGetNum(hKv, "overlap");
-			Pucca[num][MAX_Config] = MAX;
-
-		}while(KvGotoNextKey(hKv));
-		
-		if(hKv != INVALID_HANDLE) CloseHandle(hKv);
-		return true;
+			KvGetSectionName(DB, szBuffer, sizeof(szBuffer));
+			PushArrayString(kv[count], szBuffer);		
+			
+			KvGetString(DB, "file", szBuffer, sizeof(szBuffer));
+			PushArrayString(kv[count], szBuffer);
+			
+			KvGetString(DB, "title", szBuffer, sizeof(szBuffer));
+			PushArrayString(kv[count], szBuffer);
+			
+			PushArrayCell(kv[count], KvGetNum(DB, "admin"));
+			PushArrayCell(kv[count], KvGetNum(DB, "overlap"));
+			count++;
+		}
+		while(KvGotoNextKey(DB));
 	}
-	
-	if(hKv != INVALID_HANDLE) CloseHandle(hKv);
-	return false;
+	CloseHandle(DB);
+	MaxItem = count;
+	for(new i = 0; i < MaxItem; i++)
+	{
+		CheckTime[i] = 0.0;
+		SayCheck[i] = false;
+	}
+	CheckSoundOverLap = -1;
 }
 
-stock Float:Convert_Time(const String:buffer[])
+stock bool:CheckSoundCoolTime(any:iClient, Float:fTime)
 {
-	decl String:part[5];
-	new pos = SplitString(buffer, ":", part, sizeof(part));
-	if (pos == -1) return StringToFloat(buffer);
-	else return (StringToFloat(part)*60.0) + StringToFloat(buffer[pos]);
+	if(GetEngineTime() - SaySoundDelay[iClient] >= fTime) return true;
+	else return false;
 }
 
 stock Float:FileSecond(String:File2[])
@@ -337,10 +329,10 @@ stock Float:FileSecond(String:File2[])
 	return timebuf;
 }
 
-stock bool:CheckSoundCoolTime(any:iClient, Float:fTime)
+stock acv()
 {
-	if(GetEngineTime() - SaySoundDelay[iClient] >= fTime) return true;
-	else return false;
+	for(new i = 0 ; i < MaxItem ; i++) if(SayCheck[i] && CheckSoundOverLap == i) return true;
+	return false;
 }
 
 stock bool:IsClientAdmin(client)
