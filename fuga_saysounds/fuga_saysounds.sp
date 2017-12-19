@@ -27,7 +27,7 @@ public Plugin myinfo =
 	name = "Simple SaySounds",
 	author = "뿌까",
 	description = "하하하하",
-	version = "3.5",
+	version = "3.6",
 	url = "x"
 };
 
