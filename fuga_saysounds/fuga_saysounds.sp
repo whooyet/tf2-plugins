@@ -2,8 +2,6 @@
 #include <morecolors>
 #include <soundlib>
 
-#define TAG "뿌까"
-
 new Handle:kv[500] = {INVALID_HANDLE, ...};
 new MaxItem;
 
@@ -20,6 +18,9 @@ new Handle:SayR = INVALID_HANDLE;
 new Handle:SayG = INVALID_HANDLE;
 new Handle:SayB = INVALID_HANDLE;
 new Handle:SayA = INVALID_HANDLE;
+new Handle:CvarTag = INVALID_HANDLE;
+
+new String:TAG[100];
 
 public Plugin myinfo = 
 {
@@ -45,7 +46,13 @@ public OnPluginStart()
 	SayB = CreateConVar("sm_saysounds_b", "51", "Hud B");
 	SayA = CreateConVar("sm_saysounds_a", "150", "Hud A");
 	g_hHudSync = CreateHudSynchronizer();
+	
+	CvarTag = CreateConVar("sm_saysounds_tag", "뿌까");
+	HookConVarChange(CvarTag, ConVarChanged);
+	GetConVarString(CvarTag, TAG, sizeof(TAG));
 }
+
+public ConVarChanged(Handle:cvar, const String:oldVal[], const String:newVal[]) GetConVarString(CvarTag, TAG, sizeof(TAG));
 
 public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
