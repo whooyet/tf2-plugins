@@ -24,7 +24,7 @@ public Plugin myinfo =
 	name = "덜덜 SaySounds",
 	author = "뿌까",
 	description = "하하하하",
-	version = "3.0",
+	version = "3.5",
 	url = "x"
 };
 
@@ -45,28 +45,14 @@ public OnPluginStart()
 	g_hHudSync = CreateHudSynchronizer();
 }
 
-public OnMapStart()
-{
-	SoundConfig();
-	new String:temp[256]; decl String:SayFile[256];
-	for(new i = 0 ; i < MaxItem ; i++)
-	{
-		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
-		Format(temp, sizeof(temp), "sound/%s", SayFile);
-		PrecacheSound(SayFile, true);
-		AddFileToDownloadsTable(temp);
-	}
-}
-
-public OnMapEnd() for(new i = 0 ; i < 500 && i < MaxItem; i++) if(kv[i] != INVALID_HANDLE) CloseHandle(kv[i]);
 public OnClientConnected(client) SaySoundDelay[client] = 0.0;
 
 public Action:OnPlayerRunCmd(client, &buttons) 
 {
-	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.3, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA));
+	SetHudTextParams(GetConVarFloat(SayX), GetConVarFloat(SayY), 0.5, GetConVarInt(SayR), GetConVarInt(SayG), GetConVarInt(SayB), GetConVarInt(SayA));
 	
 	decl String:SayFile[256], String:SayTitle[256], overlap;
-	for(new i = 0 ; i < MaxItem ; i++)
+	for(new i = 0; i < MaxItem; i++)
 	{
 		if(kv[i] != INVALID_HANDLE)
 		{
@@ -81,11 +67,7 @@ public Action:OnPlayerRunCmd(client, &buttons)
 				if(PlayerCheck(client))
 				{
 					if(buttons & IN_SCORE) ClearSyncHud(client, g_hHudSync);
-					else 
-					{
-						ClearSyncHud(client, g_hHudSync);
-						ShowSyncHudText(client, g_hHudSync, "song: %s", SayTitle);
-					}
+					else ShowSyncHudText(client, g_hHudSync, "song: %s", SayTitle);
 				}
 			}
 					
@@ -94,8 +76,11 @@ public Action:OnPlayerRunCmd(client, &buttons)
 
 			if(time <= current_time)
 			{
-				ClearSyncHud(client, g_hHudSync);
-				if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
+				if(CheckSoundOverLap == i)
+				{
+					CheckSoundOverLap = -1;
+					ClearSyncHud(client, g_hHudSync);
+				}
 				SayCheck[i] = false;
 				CheckTime[i] = 0.0;
 			}
@@ -137,7 +122,7 @@ public Action:Say(client, String:command[], argc)
 			
 			if(overlap == 1)
 			{
-				if(acv())
+				if(CheckSoundOverLap != -1)
 				{
 					PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
 					return Plugin_Handled;
@@ -163,11 +148,7 @@ public Action:SayStop(client, args)
 	for(new i = 0 ; i < MaxItem ; i++)
 	{
 		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
-		if(SayCheck[i])
-		{
-			StopSound(client, SNDCHAN_AUTO, SayFile);
-			SayCheck[i] = false;
-		}
+		if(SayCheck[i]) StopSound(client, SNDCHAN_AUTO, SayFile);
 	}
 	PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04노래가 꺼졌습니다.");
 	return Plugin_Handled;
@@ -268,7 +249,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 		
 		if(overlap == 1)
 		{
-			if(acv())
+			if(CheckSoundOverLap != -1)
 			{
 				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
 				return;
@@ -287,11 +268,11 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 	else if(action == MenuAction_End) CloseHandle(menu);
 }
 
-stock SoundConfig()
+public OnMapStart()
 {
 	decl String:strPath[192], String:szBuffer[256];
 	BuildPath(Path_SM, strPath, sizeof(strPath), "configs/fuga_saysounds.cfg");
-	new count = 0;
+	new count = 0, String:temp[256];
 	
 	new Handle:DB = CreateKeyValues("sounds");
 	FileToKeyValues(DB, strPath);
@@ -319,13 +300,25 @@ stock SoundConfig()
 	}
 	CloseHandle(DB);
 	MaxItem = count;
+	
 	for(new i = 0; i < MaxItem; i++)
 	{
 		CheckTime[i] = 0.0;
 		SayCheck[i] = false;
 	}
 	CheckSoundOverLap = -1;
+	
+	decl String:SayFile[256];
+	for(new i = 0 ; i < MaxItem ; i++)
+	{
+		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
+		Format(temp, sizeof(temp), "sound/%s", SayFile);
+		PrecacheSound(SayFile, true);
+		AddFileToDownloadsTable(temp);
+	}
 }
+
+public OnMapEnd() for(new i = 0 ; i < 500 && i < MaxItem; i++) if(kv[i] != INVALID_HANDLE) CloseHandle(kv[i]);
 
 stock bool:CheckSoundCoolTime(any:iClient, Float:fTime)
 {
