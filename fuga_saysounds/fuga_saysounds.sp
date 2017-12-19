@@ -2,6 +2,8 @@
 #include <morecolors>
 #include <soundlib>
 
+#define TAG "뿌까"
+
 new Handle:kv[500] = {INVALID_HANDLE, ...};
 new MaxItem;
 
@@ -21,7 +23,7 @@ new Handle:SayA = INVALID_HANDLE;
 
 public Plugin myinfo = 
 {
-	name = "덜덜 SaySounds",
+	name = "Simple SaySounds",
 	author = "뿌까",
 	description = "하하하하",
 	version = "3.5",
@@ -110,13 +112,13 @@ public Action:Say(client, String:command[], argc)
 		{
 			if(!CheckSoundCoolTime(client, 3.0))
 			{
-				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.", TAG);
 				return Plugin_Handled;
 			}
 			
 			if(admin == 1  && !IsClientAdmin(client))
 			{
-				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.", TAG);
 				return Plugin_Handled;	
 			}
 			
@@ -124,7 +126,7 @@ public Action:Say(client, String:command[], argc)
 			{
 				if(CheckSoundOverLap != -1)
 				{
-					PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
+					PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.", TAG);
 					return Plugin_Handled;
 				}
 				else CheckSoundOverLap = i;
@@ -135,7 +137,7 @@ public Action:Say(client, String:command[], argc)
 			SaySoundDelay[client] = GetEngineTime();
 				
 			SayCheck[i] = true;
-			PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, SayName);
+			PrintToChatAll("\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", TAG, client, SayName);
 			return Plugin_Handled;
 		}
 	}
@@ -150,7 +152,7 @@ public Action:SayStop(client, args)
 		if(kv[i] != INVALID_HANDLE) GetArrayString(kv[i], 1, SayFile, sizeof(SayFile));
 		if(SayCheck[i]) StopSound(client, SNDCHAN_AUTO, SayFile);
 	}
-	PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04노래가 꺼졌습니다.");
+	PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x04노래가 꺼졌습니다.", TAG);
 	return Plugin_Handled;
 }
 
@@ -174,7 +176,7 @@ public Action:SayAllStop(client, args)
 			if(CheckSoundOverLap == i) CheckSoundOverLap = -1;
 		}
 	}
-	PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 노래를 껏습니다.", client);
+	PrintToChatAll("\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 노래를 껏습니다.", TAG, client);
 	return Plugin_Handled;
 }
 
@@ -228,7 +230,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 		
 		if(!CheckSoundCoolTime(client, 3.0))
 		{
-			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.");
+			PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x043초 후에 다시 사용 가능 합니다.", TAG);
 			return;
 		}
 		
@@ -242,7 +244,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 		
 		if(admin == 1  && !IsClientAdmin(client))
 		{
-			PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.");
+			PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x04당신은 이 노래를 틀 수 없습니다.", TAG);
 			return;	
 		}
 
@@ -251,7 +253,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 		{
 			if(CheckSoundOverLap != -1)
 			{
-				PrintToChat(client, "\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.");
+				PrintToChat(client, "\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x04중복으로 틀 수 없습니다.", TAG);
 				return;
 			}
 			else CheckSoundOverLap = i;
@@ -262,7 +264,7 @@ public Sound_Select(Handle:menu, MenuAction:action, client, select)
 		SaySoundDelay[client] = GetEngineTime();
 				
 		SayCheck[i] = true;
-		PrintToChatAll("\x07FFFFFF[\x07ff0000덜덜 \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", client, SayName);
+		PrintToChatAll("\x07FFFFFF[\x07ff0000%s \x07FFFFFFSaySounds] \x0700ccff%N\x07FFFFFF 님이 \x04%s \x07FFFFFF노래를 틀었습니다.", TAG, client, SayName);
 		return;
 	}
 	else if(action == MenuAction_End) CloseHandle(menu);
