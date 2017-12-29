@@ -99,6 +99,8 @@ public Action:OnPlayerRunCmd(client, &buttons)
 
 public Action:Say(client, String:command[], argc)
 {
+	if(!client) return Plugin_Continue;
+	
 	decl String:text[256];
 	GetCmdArgString(text, sizeof(text));
 	StripQuotes(text);
