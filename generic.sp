@@ -3,11 +3,13 @@
 #include <morecolors>
 #include <tf2>
 #include <tf2_stocks>
+#include <tf2attributes>
+#include <sourcemod-misc>
 #include <sdkhooks>
-#include <gmg\core>
+#include <gmg\core> 
 #include <gmg\misc>
 
-#define flag ADMFLAG_KICK
+#define flag ADMFLAG_KICK 
 // #define flag 0
 
 new Float:rof[MAXPLAYERS+1];
@@ -17,6 +19,8 @@ new bool:god[MAXPLAYERS+1];
 new bool:jump[MAXPLAYERS+1];
 new bool:bjump[MAXPLAYERS+1];
 new bool:party[MAXPLAYERS+1];
+
+new sec;
 
 public Plugin:myinfo = 
 {
@@ -46,12 +50,24 @@ public OnPluginStart()
 	RegAdminCmd("sm_cond", Command_Addcond, flag);
 	RegAdminCmd("sm_restart", Command_Restart, flag);
 	RegAdminCmd("sm_rof", Command_Rof, flag);
-	RegAdminCmd("sm_seeyou", Command_SeeYou, 0);
+	RegAdminCmd("sm_seeyou", Command_SeeYou, flag);
 	RegAdminCmd("sm_jump", Command_Jump, flag);
 	RegAdminCmd("sm_bj", Command_BotJump, flag);
 	RegAdminCmd("sm_bot", Command_AddBot, flag);
 	RegAdminCmd("sm_party", Command_Party, flag);
 	RegAdminCmd("sm_pos", Command_Pos, flag);
+	
+	RegAdminCmd("sm_heads", Command_HeadSize, flag);
+	RegAdminCmd("sm_bodys", Command_BodySize, flag);
+	RegAdminCmd("sm_hands", Command_HandSize, flag);
+	RegAdminCmd("sm_voices", Command_VoiceSpeed, flag);
+	RegAdminCmd("sm_taunts", Command_TauntSpeed, flag);
+	RegAdminCmd("sm_size", Command_Size, flag);
+	RegAdminCmd("sm_resetsize", Command_ResetSize, flag);
+	
+	RegAdminCmd("sm_randomp", Command_RandomPlayer, flag);
+	RegAdminCmd("sm_3", Command_ThreeSec, flag);
+	RegAdminCmd("sm_noattack", Command_NoAttack, flag);
 	
 	AddMultiTargetFilter("@admin", admin, "all admin", false)
 	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false)
@@ -66,6 +82,18 @@ public OnPluginStart()
 public OnMapStart()
 {
 	PrecacheSound(SOUND_TELE);
+	
+	PrecacheSound("vo/announcer_begins_3sec.mp3");
+	PrecacheSound("vo/announcer_begins_2sec.mp3");
+	PrecacheSound("vo/announcer_begins_1sec.mp3");
+	
+	PrecacheSound("vo/announcer_ends_3sec.mp3");
+	PrecacheSound("vo/announcer_ends_2sec.mp3");
+	PrecacheSound("vo/announcer_ends_1sec.mp3");
+	
+	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_03sec.mp3");
+	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_02sec.mp3");
+	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_01sec.mp3");
 }
 
 public OnClientPutInServer(client)
@@ -789,6 +817,387 @@ public Action:Command_Pos(client, args)
 	return Plugin_Handled;
 }
 
+public Action:Command_HeadSize(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_heads <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 444);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 머리 크기 초기화", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 444, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 머리 크기 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_BodySize(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_bodys <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 620);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 몸통 크기 초기화", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 620, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 크기 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 몸통 크기 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_HandSize(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_hands <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 699);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 손 크기 초기화", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 699, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 손 크기 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_VoiceSpeed(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_voices <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 2048);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 음성 속도 초기화", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 2048, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_TauntSpeed(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_taunts <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 201);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 도발 속도 초기화", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 201, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 도발 속도 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Size(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_size <player> <value>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			SetSize(user, 1.0);	
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 초기화", user);
+			else CPrintToChat(client, "{white}%N님의 몸 크기 초기화", client);
+		}
+		else
+		{
+			SetSize(user, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 {green}%1.f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 몸 크기 {green}%1.f", client, StringToFloat(amount));
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_ResetSize(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_resetsize <player>");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[65];
+	GetCmdArg(1, arg, sizeof(arg));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+		
+		SetSize(user, 1.0);
+		TF2Attrib_RemoveByDefIndex(user, 620);
+		TF2Attrib_RemoveByDefIndex(user, 444);
+		TF2Attrib_RemoveByDefIndex(user, 2048);
+		TF2Attrib_RemoveByDefIndex(user, 699);
+		
+		if(user != client) CPrintToChat(user, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
+		else CPrintToChat(client, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
+	}
+	return Plugin_Handled;
+}
+
+public Action:Command_RandomPlayer(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_randomp <alive 1 / 0 > <blue = 3, red = 2, spec = 1, all = 0");
+		return Plugin_Handled;
+	}
+	
+	decl String:arg[12], String:arg2[12];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+
+	new bool:alive;
+	
+	if(StringToInt(arg) == 1) alive = true;
+	else alive = false
+	
+	new user = GetRandomClient(true, alive, false, StringToInt(arg2));
+	
+	if(user == 0)
+	{
+		ReplyToTargetError(client, 0);
+		return Plugin_Handled;
+	}
+	CPrintToChatAll("{white}%N님이 랜덤으로 뽑혔습니다.", user);
+	return Plugin_Handled;
+}
+
+public Action:Command_ThreeSec(client, args)
+{
+	switch(GetRandomInt(0,2))
+	{
+		case 0: sec = 0;
+		case 1: sec = 1;
+		case 2: sec = 2;
+	}
+	
+	if(sec == 0) EmitSoundToAll("vo/announcer_begins_3sec.mp3");
+	if(sec == 1) EmitSoundToAll("vo/announcer_ends_3sec.mp3");
+	if(sec == 2) EmitSoundToAll("vo/halloween_merasmus/sf14_merasmus_begins_03sec.mp3");
+	CreateTimer(1.0, two);
+	return Plugin_Handled;
+}
+
+public Action:two(Handle:timer)
+{
+	if(sec == 0) EmitSoundToAll("vo/announcer_begins_2sec.mp3");
+	if(sec == 1) EmitSoundToAll("vo/announcer_ends_2sec.mp3");
+	if(sec == 2) EmitSoundToAll("vo/halloween_merasmus/sf14_merasmus_begins_02sec.mp3");
+	CreateTimer(1.0, one);
+}
+public Action:one(Handle:timer)
+{
+	if(sec == 0) EmitSoundToAll("vo/announcer_begins_1sec.mp3");
+	if(sec == 1) EmitSoundToAll("vo/announcer_ends_1sec.mp3");
+	if(sec == 2) EmitSoundToAll("vo/halloween_merasmus/sf14_merasmus_begins_01sec.mp3");
+}
+
+public Action:Command_NoAttack(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_noattack <player>");
+		return Plugin_Handled;
+	}
+
+	decl String:arg[65], String:amount[64];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, amount, sizeof(amount));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+
+		if(StrEqual(amount, "off"))
+		{
+			TF2Attrib_RemoveByDefIndex(user, 821);	
+			if(user != client) CPrintToChat(user, "{white}%N님은 이제 공격 가능", user);
+			else CPrintToChat(client, "{white}%N님은 이제 공격 가능", client);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(user, 821, 1.0);
+			if(user != client) CPrintToChat(user, "{white}%N님은 이제 공격 불가능", user);
+			else CPrintToChat(client, "{white}%N님은 이제 공격 불가능", client);
+		}
+	}
+	return Plugin_Handled;
+}
+
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
 {
 	new index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
@@ -838,6 +1247,12 @@ stock ChangeClientTeamAlive(client, team){
 	SetEntProp(client, Prop_Send, "m_lifeState", 2);
 	ChangeClientTeam(client, team);
 	SetEntProp(client, Prop_Send, "m_lifeState", 0);
+}
+
+stock SetSize(client, Float:value)
+{
+	SetEntPropFloat(client, Prop_Send, "m_flModelScale", value);
+	SetEntPropFloat(client, Prop_Send, "m_flStepSize", 18.0 * value)
 }
 
 stock SetGod(client, bool:num = true)
