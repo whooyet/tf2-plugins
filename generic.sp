@@ -10,6 +10,7 @@
 #include <gmg\misc>
 
 #define flag ADMFLAG_KICK 
+#define FUCCA "\x07FF1493[뿌까] "
 // #define flag 0
 
 new Float:rof[MAXPLAYERS+1];
@@ -27,7 +28,7 @@ public Plugin:myinfo =
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.4",
+	version = "1.4.2",
 	url = "googlehammer.com"
 }
 
@@ -139,7 +140,7 @@ public Action:Command_bring(client, args)
 	
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_bring <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_bring <player>");
 		return Plugin_Handled;
 	}
 	
@@ -163,8 +164,8 @@ public Action:Command_bring(client, args)
 			GetCollisionPoint(client, origin);
 			TeleportPlayer(user, origin, true);
 			
-			CPrintToChat(user, "{green}%N{white}님이 {green}%N{white}님을 이동시켰습니다.", client, user);
-			if(user != client) CPrintToChat(client, "{white}%N님을 {green}이동{white}시켰습니다.", user);
+			CPrintToChat(user, "%s{green}%N{white}님이 {green}%N{white}님을 이동시켰습니다.", FUCCA, client, user);
+			if(user != client) CPrintToChat(client, "%s{white}%N님을 {green}이동{white}시켰습니다.", FUCCA, user);
 		}
 	}
 	return Plugin_Handled;
@@ -174,7 +175,7 @@ public Action:Command_Goto(client, args)
 {
 	if(!IsPlayerAlive(client))
 	{
-		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		Fucca_ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
 		return Plugin_Handled;
 	}
 	
@@ -183,7 +184,7 @@ public Action:Command_Goto(client, args)
 	
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_goto <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_goto <player>");
 		return Plugin_Handled;
 	}
 	
@@ -209,7 +210,7 @@ public Action:Command_Warp(client, args)
 {
 	if(!IsPlayerAlive(client))
 	{
-		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		Fucca_ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
 		return Plugin_Handled;
 	}
 	
@@ -226,7 +227,7 @@ public Action:Command_Crits(client, args)
 	
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_cri <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_cri <player>");
 		return Plugin_Handled;
 	}
 	
@@ -245,9 +246,9 @@ public Action:Command_Crits(client, args)
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		
 		TF2_AddCondition(user, TFCond_CritOnWin, -1.0);
-		CPrintToChat(user, "{white}크리 {green}On");
+		CPrintToChat(user, "%s{white}크리 {green}On", FUCCA);
 		
-		if(user != client) CPrintToChat(client, "{white}%N님이 {green}크리{white}를 사용합니다.", user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님이 {green}크리{white}를 사용합니다.", FUCCA, user);
 	}
 	return Plugin_Handled;
 }
@@ -260,7 +261,7 @@ public Action:Command_God(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_god <player> <on / off>");
+		Fucca_ReplyToCommand(client, "Usage: sm_god <player> <on / off>");
 		return Plugin_Handled;
 	}
 	
@@ -280,16 +281,16 @@ public Action:Command_God(client, args)
 		if(StrEqual(aa[1], "on"))
 		{
 			SetGod(user, true);
-			CPrintToChat(user, "{white}무적 {green}On");
+			CPrintToChat(user, "%s{white}무적 {green}On", FUCCA);
 			god[user] = true;
-			if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용합니다.", user);
+			if(user != client) CPrintToChat(client, "%s{white}%N님이 {green}무적{white}을 사용합니다.", FUCCA, user);
 		}
 		else if(StrEqual(aa[1], "off"))
 		{
 			SetGod(user, false);
-			CPrintToChat(user, "{white}무적 {green}Off");
+			CPrintToChat(user, "%s{white}무적 {green}Off", FUCCA);
 			god[user] = false;
-			if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용하지 않습니다.", user);
+			if(user != client) CPrintToChat(client, "%s{white}%N님이 {green}무적{white}을 사용하지 않습니다.", FUCCA, user);
 		}
 	}
 	return Plugin_Handled;
@@ -303,7 +304,7 @@ public Action:Command_Stun(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], "") || StrEqual(aa[2], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
+		Fucca_ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
 		return Plugin_Handled;
 	}
 	
@@ -322,9 +323,9 @@ public Action:Command_Stun(client, args)
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		
 		TF2_StunPlayer(user, StringToFloat(aa[1]), _, TF_STUNFLAGS_NORMALBONK);
-		CPrintToChat(user, "{green}%N님 {green}스턴 %i초 {white}%s", user, StringToInt(aa[1]), aa[2]);
+		CPrintToChat(user, "%s{green}%N님 {green}스턴 %i초 {white}%s", FUCCA, user, StringToInt(aa[1]), aa[2]);
 		
-		if(user != client) CPrintToChat(client, "{white}%N님이 {green}스턴{white}을 받았습니다.", user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님이 {green}스턴{white}을 받았습니다.", FUCCA, user);
 	}
 	return Plugin_Handled;
 }
@@ -337,7 +338,7 @@ public Action:Command_Health(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_health <player> <amount>");
+		Fucca_ReplyToCommand(client, "Usage: sm_health <player> <amount>");
 		return Plugin_Handled;
 	}
 	new health = StringToInt(aa[1]);
@@ -357,7 +358,7 @@ public Action:Command_Health(client, args)
 		
 		new Gethp = GetClientHealth(client);
 		SetHealth(user, Gethp, health);
-		if(user != client) CPrintToChat(client, "{white}%N님은 {green}체력{white}이 증가되거나 감소되었습니다.", user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님은 {green}체력{white}이 증가되거나 감소되었습니다.", FUCCA, user);
 	}
 	return Plugin_Handled;
 }
@@ -370,7 +371,7 @@ public Action:Command_Class(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_class <player> <1 ~ 9>");
+		Fucca_ReplyToCommand(client, "Usage: sm_class <player> <1 ~ 9>");
 		return Plugin_Handled;
 	}
 	
@@ -387,7 +388,7 @@ public Action:Command_Class(client, args)
 	else if(StrEqual(aa[1], "9", false)) class = TFClass_Spy;
 	else
 	{
-		ReplyToCommand(client, "[SM] Invalid Class (\"%s\")", aa[1]);
+		ReplyToCommand(client, "%s\x07FFFFFF[SM] Invalid Class (\"%s\")", FUCCA, aa[1]);
 		return Plugin_Handled;
 	}
 	
@@ -413,7 +414,7 @@ public Action:Command_Class(client, args)
 		
 		TeleportEntity(user, pos, NULL_VECTOR, NULL_VECTOR);
 		
-		if(user != client) CPrintToChat(client, "{white}%N님의 {green}클래스{white}가 변경되었습니다.", user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님의 {green}클래스{white}가 변경되었습니다.", FUCCA, user);
 	}
 
 	return Plugin_Handled;
@@ -427,7 +428,7 @@ public Action:Command_Team(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_team <player> <2,3>");
+		Fucca_ReplyToCommand(client, "Usage: sm_team <player> <2,3>");
 		return Plugin_Handled;
 	}
 	
@@ -435,7 +436,7 @@ public Action:Command_Team(client, args)
 	
 	if(team > 3)
 	{
-		ReplyToCommand(client, "\x03관전자팀은 1 레드팀은 2 | 블루팀은 3");
+		Fucca_ReplyToCommand(client, "\x03관전자팀은 1 레드팀은 2 | 블루팀은 3");
 		return Plugin_Handled;
 	}
 
@@ -457,8 +458,8 @@ public Action:Command_Team(client, args)
 			if(!IsPlayerAlive(client)) ChangeClientTeam(user, team);
 			else ChangeClientTeamAlive(user, team);
 			
-			CPrintToChat(user, "{green}%N{white}님의 팀이 변경되었습니다.", user);
-			if(user != client) CPrintToChat(client, "{white}%N님의 {green}팀{white}을 변경하였습니다.", user);
+			CPrintToChat(user, "%s{green}%N{white}님의 팀이 변경되었습니다.", FUCCA, user);
+			if(user != client) CPrintToChat(client, "%s{white}%N님의 {green}팀{white}을 변경하였습니다.", FUCCA, user);
 		}
 	}
 
@@ -468,7 +469,7 @@ public Action:Command_Team(client, args)
 public Action:Command_Scramble(client, args)
 {
 	ServerCommand("mp_scrambleteams 1");
-	ReplyToCommand(client, "\x04팀을 섞습니다.");
+	Fucca_ReplyToCommand(client, "\x04팀을 섞습니다.");
 	return Plugin_Handled;
 }
 
@@ -479,7 +480,7 @@ public Action:Command_Respawn(client, args)
 
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_respawn <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_respawn <player>");
 		return Plugin_Handled;
 	}
 	
@@ -555,7 +556,6 @@ public Menu_PlayersList(Handle:menu, MenuAction:action, client, select)
 			new user = StringToInt(aa[1])
 			GetClientAuthId(user, AuthId_SteamID64, Steam64, sizeof(Steam64));
 			Format(url, sizeof(url), "http://steamcommunity.com/profiles/%s", Steam64);
-			// PrintToChat(client, "%s", url);
 			motd(client, url);
 		}
 		else 
@@ -575,7 +575,7 @@ public Action:Command_Addcond(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], "") || StrEqual(aa[2], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_cond <player> <condid> <duration>");
+		Fucca_ReplyToCommand(client, "Usage: sm_cond <player> <condid> <duration>");
 		return Plugin_Handled;
 	}
 
@@ -596,7 +596,7 @@ public Action:Command_Addcond(client, args)
 		new cond = StringToInt(aa[1]);
 		
 		TF2_AddCondition(user, TFCond:cond, duration);
-		if(user != client) CPrintToChat(client, "{white}%N님은 {green}치트{white}를 사용합니다.", user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님은 {green}치트{white}를 사용합니다.", FUCCA, user);
 	}
 	
 	return Plugin_Handled;
@@ -605,7 +605,7 @@ public Action:Command_Addcond(client, args)
 public Action:Command_Restart(client, args)
 {
 	ServerCommand("mp_restartgame 1");
-	ReplyToCommand(client, "\x04라운드를 다시 시작합니다.");
+	Fucca_ReplyToCommand(client, "\x04라운드를 다시 시작합니다.");
 	return Plugin_Handled;
 }
 
@@ -617,7 +617,7 @@ public Action:Command_Rof(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_rof <player> <amount>");
+		Fucca_ReplyToCommand(client, "Usage: sm_rof <player> <amount>");
 		return Plugin_Handled;
 	}
 
@@ -634,8 +634,8 @@ public Action:Command_Rof(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		rof[user] = StringToFloat(aa[1]);
-		CPrintToChat(user, "{white} 공속 %.1f", rof[user]);
-		if(user != client) CPrintToChat(client, "{white}%N님의 {green}공속{white}이 변경되었습니다.", user);
+		CPrintToChat(user, "%s{white} 공속 %.1f", FUCCA, rof[user]);
+		if(user != client) CPrintToChat(client, "%s{white}%N님의 {green}공속{white}이 변경되었습니다.", FUCCA, user);
 	}
 	return Plugin_Handled;
 }
@@ -647,7 +647,7 @@ public Action:Command_SeeYou(client, args)
 
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_seeyou <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_seeyou <player>");
 		return Plugin_Handled;
 	}
 
@@ -665,8 +665,8 @@ public Action:Command_SeeYou(client, args)
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 
 		see[client] = user;
-		CPrintToChat(client, "{white}재장전 키로 관찰합니다.");
-		CPrintToChat(user, "{white}누군가 당신을 보고 있습니다.");
+		CPrintToChat(client, "%s{white}재장전 키로 관찰합니다.", FUCCA);
+		CPrintToChat(user, "%s{white}누군가 당신을 보고 있습니다.", FUCCA);
 	}
 	
 	return Plugin_Handled;
@@ -680,7 +680,7 @@ public Action:Command_Jump(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_jump <player> on / off");
+		Fucca_ReplyToCommand(client, "Usage: sm_jump <player> on / off");
 		return Plugin_Handled;
 	}
 
@@ -700,17 +700,17 @@ public Action:Command_Jump(client, args)
 		if(StrEqual(aa[1], "on"))
 		{
 			jump[user] = true;
-			CPrintToChat(user, "{white}점프 모드 {green}On");
+			CPrintToChat(user, "%s{white}점프 모드 {green}On", FUCCA);
 			SetGod(user, true);
 		}
 		else if(StrEqual(aa[1], "off"))
 		{
 			jump[user] = false;
-			CPrintToChat(user, "{white}점프 모드 {green}Off");
+			CPrintToChat(user, "%s{white}점프 모드 {green}Off", FUCCA);
 			SetGod(user, false);
 		}
 		
-		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} %s", user, aa[1]);
+		if(user != client) CPrintToChat(client, "%s{white}%N님 {green}점프 모드{white} %s", FUCCA, user, aa[1]);
 	}
 	
 	return Plugin_Handled;
@@ -718,7 +718,7 @@ public Action:Command_Jump(client, args)
 public Action:Command_BotJump(client, args)
 {
 	for(new i = 1; i <= MaxClients; i++) if(IsClientInGame(i) && IsFakeClient(i)) bjump[i] = true;
-	CPrintToChat(client, "{white}봇 점프 모드 {green}On");
+	CPrintToChat(client, "%s{white}봇 점프 모드 {green}On", FUCCA);
 	return Plugin_Handled;
 }
 
@@ -726,7 +726,7 @@ public Action:Command_AddBot(client, args)
 {
 	if(args != 1)
 	{
-		ReplyToCommand(client, "Usage: sm_bot <0 ~ 32>");
+		Fucca_ReplyToCommand(client, "Usage: sm_bot <0 ~ 32>");
 		return Plugin_Handled;
 	}
 	
@@ -744,7 +744,7 @@ public Action:Command_Party(client, args)
 
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_party <name>");
+		Fucca_ReplyToCommand(client, "Usage: sm_party <name>");
 		return Plugin_Handled;
 	}
 	
@@ -764,17 +764,17 @@ public Action:Command_Party(client, args)
 		if(!party[user])
 		{
 			party[user] = true;
-			CPrintToChat(user, "{white}파티에 참가하였습니다.");
+			CPrintToChat(user, "%s{white}파티에 참가하였습니다.", FUCCA);
 		}
 		else
 		{
 			party[user] = false;
-			CPrintToChat(user,  "{white}파티에서 나갔습니다.");
+			CPrintToChat(user,  "%s{white}파티에서 나갔습니다.", FUCCA);
 		}
 		if(user != client)
 		{
-			if(!party[user]) CPrintToChat(client, "{white}%N님이 파티에서 나갔습니다.", user);
-			else CPrintToChat(client, "{white}%N님이 파티에 참가하였습니다.", user);
+			if(!party[user]) CPrintToChat(client, "%s{white}%N님이 파티에서 나갔습니다.", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님이 파티에 참가하였습니다.", FUCCA, user);
 		}
 	}
 	return Plugin_Handled;
@@ -784,7 +784,7 @@ public Action:Command_Pos(client, args)
 {
 	if(!IsPlayerAlive(client))
 	{
-		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
+		Fucca_ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
 		return Plugin_Handled;
 	}
 
@@ -794,7 +794,7 @@ public Action:Command_Pos(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
+		Fucca_ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
 		return Plugin_Handled;
 	}
 
@@ -819,7 +819,7 @@ public Action:Command_HeadSize(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_heads <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_heads <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -839,14 +839,14 @@ public Action:Command_HeadSize(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 444);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 머리 크기 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 머리 크기 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 머리 크기 초기화", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 444, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 {green}%1.f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 머리 크기 {green}%1.f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 머리 크기 {green}%1.f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 머리 크기 {green}%1.f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -860,7 +860,7 @@ public Action:Command_BodySize(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_bodys <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_bodys <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -880,14 +880,14 @@ public Action:Command_BodySize(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 620);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 몸통 크기 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 몸통 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 몸통 크기 초기화", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 620, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 크기 {green}%1.f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 몸통 크기 {green}%1.f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 몸통 크기 {green}%1.f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 몸통 크기 {green}%1.f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -901,7 +901,7 @@ public Action:Command_HandSize(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_hands <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_hands <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -921,14 +921,14 @@ public Action:Command_HandSize(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 699);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 손 크기 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 손 크기 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 손 크기 초기화", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 699, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 {green}%1.f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 손 크기 {green}%1.f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 손 크기 {green}%1.f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 손 크기 {green}%1.f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -942,7 +942,7 @@ public Action:Command_VoiceSpeed(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_voices <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_voices <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -962,14 +962,14 @@ public Action:Command_VoiceSpeed(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 2048);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 음성 속도 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 음성 속도 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 음성 속도 초기화", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 2048, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 음성 속도 {green}%f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 음성 속도 {green}%f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -983,7 +983,7 @@ public Action:Command_TauntSpeed(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_taunts <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_taunts <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -1003,14 +1003,14 @@ public Action:Command_TauntSpeed(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 201);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 도발 속도 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 도발 속도 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 도발 속도 초기화", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 201, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 {green}%1.f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 도발 속도 {green}%1.f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 도발 속도 {green}%1.f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 도발 속도 {green}%1.f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -1024,7 +1024,7 @@ public Action:Command_Size(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_size <player> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_size <player> <value>");
 		return Plugin_Handled;
 	}
 
@@ -1044,14 +1044,14 @@ public Action:Command_Size(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			SetSize(user, 1.0);	
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 초기화", user);
-			else CPrintToChat(client, "{white}%N님의 몸 크기 초기화", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 몸 크기 초기화", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님의 몸 크기 초기화", FUCCA, client);
 		}
 		else
 		{
 			SetSize(user, StringToFloat(aa[1]));
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 {green}%1.f", user, StringToFloat(aa[1]));
-			else CPrintToChat(client, "{white}%N님의 몸 크기 {green}%1.f", client, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "%s{white}%N님의 몸 크기 {green}%1.f", FUCCA, user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "%s{white}%N님의 몸 크기 {green}%1.f", FUCCA, client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -1064,7 +1064,7 @@ public Action:Command_ResetSize(client, args)
 
 	if(StrEqual(arg, ""))
 	{
-		ReplyToCommand(client, "Usage: sm_resetsize <player>");
+		Fucca_ReplyToCommand(client, "Usage: sm_resetsize <player>");
 		return Plugin_Handled;
 	}
 
@@ -1086,9 +1086,6 @@ public Action:Command_ResetSize(client, args)
 		TF2Attrib_RemoveByDefIndex(user, 444);
 		TF2Attrib_RemoveByDefIndex(user, 2048);
 		TF2Attrib_RemoveByDefIndex(user, 699);
-		
-		// if(user != client) CPrintToChat(user, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
-		// else CPrintToChat(client, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
 	}
 	return Plugin_Handled;
 }
@@ -1097,7 +1094,7 @@ public Action:Command_RandomPlayer(client, args)
 {
 	if(args != 2)
 	{
-		ReplyToCommand(client, "Usage: sm_randomp <alive 1 / 0 > <blue = 3, red = 2, spec = 1, all = 0");
+		Fucca_ReplyToCommand(client, "Usage: sm_randomp <alive 1 / 0 > <blue = 3, red = 2, spec = 1, all = 0");
 		return Plugin_Handled;
 	}
 	
@@ -1159,7 +1156,7 @@ public Action:Command_NoAttack(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_noattack <player> <on / off>");
+		Fucca_ReplyToCommand(client, "Usage: sm_noattack <player> <on / off>");
 		return Plugin_Handled;
 	}
 
@@ -1179,14 +1176,14 @@ public Action:Command_NoAttack(client, args)
 		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 821);	
-			if(user != client) CPrintToChat(user, "{white}%N님은 이제 공격 가능", user);
-			else CPrintToChat(client, "{white}%N님은 이제 공격 가능", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님은 이제 공격 가능", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님은 이제 공격 가능", FUCCA, client);
 		}
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 821, 1.0);
-			if(user != client) CPrintToChat(user, "{white}%N님은 이제 공격 불가능", user);
-			else CPrintToChat(client, "{white}%N님은 이제 공격 불가능", client);
+			if(user != client) CPrintToChat(user, "%s{white}%N님은 이제 공격 불가능", FUCCA, user);
+			else CPrintToChat(client, "%s{white}%N님은 이제 공격 불가능", FUCCA, client);
 		}
 	}
 	return Plugin_Handled;
@@ -1200,7 +1197,7 @@ public Action:Command_Whisper(client, args)
 	
 	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_wr <player> <say>");
+		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
 	}
 
@@ -1216,9 +1213,9 @@ public Action:Command_Whisper(client, args)
 	{
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
-		CPrintToChat(user, "\x07ADFF2F[귓속말] \x03%N: {white}%s", client, aa[1]);
+		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, aa[1]);
 	}
-	PrintToChat(client, "\x04전달되었습니다.");
+	PrintToChat(client, "%s\x07FFFFFF전달되었습니다.", FUCCA);
 	return Plugin_Handled;
 }
 
@@ -1267,6 +1264,8 @@ public Action:OnPlayerRunCmd(client, &iButtons, &iImpulse, Float:fVel[3], Float:
 	return Plugin_Continue;
 }
 
+stock Fucca_ReplyToCommand(client, String:say[]) ReplyToCommand(client, "%s\x07FFFFFF%s", FUCCA, say);
+
 stock ChangeClientTeamAlive(client, team){
 	SetEntProp(client, Prop_Send, "m_lifeState", 2);
 	ChangeClientTeam(client, team);
@@ -1288,8 +1287,8 @@ stock SetGod(client, bool:num = true)
 stock SetHealth(client, Gethp, sethp)
 {
 	SetEntityHealth(client, sethp);
-	if(Gethp < sethp) CPrintToChat(client, "{green}체력 %i {white}증가", sethp);
-	else CPrintToChat(client, "{green}체력 %i {white}감소", sethp);
+	if(Gethp < sethp) CPrintToChat(client, "%s{green}체력 %i {white}증가", FUCCA, sethp);
+	else CPrintToChat(client, "%s{green}체력 %i {white}감소", FUCCA, sethp);
 }
 
 stock ModRateOfFire(iWeapon, Float:Amount)
