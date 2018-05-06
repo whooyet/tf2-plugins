@@ -4,7 +4,7 @@
 #include <tf2>
 #include <tf2_stocks>
 #include <tf2attributes>
-#include <sourcemod-misc>
+// #include <sourcemod-misc>
 #include <sdkhooks>
 #include <gmg\core> 
 #include <gmg\misc>
@@ -65,7 +65,7 @@ public OnPluginStart()
 	RegAdminCmd("sm_size", Command_Size, flag);
 	RegAdminCmd("sm_resetsize", Command_ResetSize, flag);
 	
-	RegAdminCmd("sm_randomp", Command_RandomPlayer, flag);
+	// RegAdminCmd("sm_randomp", Command_RandomPlayer, flag);
 	RegAdminCmd("sm_3", Command_ThreeSec, flag);
 	RegAdminCmd("sm_noattack", Command_NoAttack, flag);
 	
@@ -715,7 +715,7 @@ public Action:Command_Jump(client, args)
 			SetGod(user, false);
 		}
 		
-		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} On", user);
+		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} %s", user, amount);
 	}
 	
 	return Plugin_Handled;
@@ -974,8 +974,8 @@ public Action:Command_VoiceSpeed(client, args)
 		else
 		{
 			TF2Attrib_SetByDefIndex(user, 2048, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%1.f", client, StringToFloat(amount));
+			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%f", user, StringToFloat(amount));
+			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%f", client, StringToFloat(amount));
 		}
 	}
 	return Plugin_Handled;
@@ -1065,7 +1065,7 @@ public Action:Command_Size(client, args)
 
 public Action:Command_ResetSize(client, args)
 {
-	if(args != 2)
+	if(args != 1)
 	{
 		ReplyToCommand(client, "Usage: sm_resetsize <player>");
 		return Plugin_Handled;
@@ -1093,12 +1093,12 @@ public Action:Command_ResetSize(client, args)
 		TF2Attrib_RemoveByDefIndex(user, 2048);
 		TF2Attrib_RemoveByDefIndex(user, 699);
 		
-		if(user != client) CPrintToChat(user, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
-		else CPrintToChat(client, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
+		// if(user != client) CPrintToChat(user, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
+		// else CPrintToChat(client, "{white}%N님 전체적으로 몸 크기가 초기화되었습니다.");
 	}
 	return Plugin_Handled;
 }
-
+/*
 public Action:Command_RandomPlayer(client, args)
 {
 	if(args != 2)
@@ -1125,7 +1125,7 @@ public Action:Command_RandomPlayer(client, args)
 	}
 	CPrintToChatAll("{white}%N님이 랜덤으로 뽑혔습니다.", user);
 	return Plugin_Handled;
-}
+}*/
 
 public Action:Command_ThreeSec(client, args)
 {
