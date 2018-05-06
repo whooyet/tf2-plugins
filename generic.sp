@@ -69,6 +69,8 @@ public OnPluginStart()
 	RegAdminCmd("sm_3", Command_ThreeSec, flag);
 	RegAdminCmd("sm_noattack", Command_NoAttack, flag);
 	
+	RegConsoleCmd("sm_wr", Command_Whisper);
+	
 	AddMultiTargetFilter("@admin", admin, "all admin", false)
 	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false)
 	AddMultiTargetFilter("@rb", redbots, "all red bots", false)
@@ -1195,6 +1197,36 @@ public Action:Command_NoAttack(client, args)
 			else CPrintToChat(client, "{white}%N님은 이제 공격 불가능", client);
 		}
 	}
+	return Plugin_Handled;
+}
+
+public Action:Command_Whisper(client, args)
+{
+	if(args != 2)
+	{
+		ReplyToCommand(client, "Usage: sm_wr <player> <say>");
+		return Plugin_Handled;
+	}
+
+	decl String:arg[64], String:say[256];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, say, sizeof(say));
+
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		if (!IsClientInGame(user)) return Plugin_Handled;
+		CPrintToChat(user, "\x07ADFF2F[귓속말] \x03%N: {white}%s", client, say);
+	}
+	PrintToChat(client, "\x04전달되었습니다.");
 	return Plugin_Handled;
 }
 
