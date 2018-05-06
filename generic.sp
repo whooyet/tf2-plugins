@@ -25,9 +25,9 @@ new sec;
 public Plugin:myinfo = 
 {
 	name = "Generic Admin Commands",
-	author = "Pelipoika + take2",
+	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.3.5",
+	version = "1.4",
 	url = "googlehammer.com"
 }
 
@@ -134,16 +134,16 @@ public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBro
 
 public Action:Command_bring(client, args)
 {
-	if(args != 1)
+	decl String:arg[64];
+	GetCmdArgString(arg, sizeof(arg));
+	
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_bring <player>");
 		return Plugin_Handled;
 	}
 	
-	decl String:arg[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	
-	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+	decl String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
 	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
@@ -172,12 +172,6 @@ public Action:Command_bring(client, args)
 
 public Action:Command_Goto(client, args)
 {
-	if(args != 1)
-	{
-		ReplyToCommand(client, "Usage: sm_goto <player>");
-		return Plugin_Handled;
-	}
-	
 	if(!IsPlayerAlive(client))
 	{
 		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
@@ -185,7 +179,13 @@ public Action:Command_Goto(client, args)
 	}
 	
 	decl String:arg[64], target, Float:TargetOrigin[3];
-	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArgString(arg, sizeof(arg));
+	
+	if(StrEqual(arg, ""))
+	{
+		ReplyToCommand(client, "Usage: sm_goto <player>");
+		return Plugin_Handled;
+	}
 	
 	if ((target = FindTarget(client, arg, false, true)) <= 0)
 	{
@@ -221,14 +221,14 @@ public Action:Command_Warp(client, args)
 
 public Action:Command_Crits(client, args)
 {
-	if(args != 1)
+	decl String:arg[64];
+	GetCmdArgString(arg, sizeof(arg));
+	
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_cri <player>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[64];
-	GetCmdArg(1, arg, sizeof(arg));
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
@@ -254,19 +254,19 @@ public Action:Command_Crits(client, args)
 
 public Action:Command_God(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_god <player> <on / off>");
 		return Plugin_Handled;
 	}
 	
-	decl String:arg[64], String:arg2[32];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -277,42 +277,39 @@ public Action:Command_God(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		
-		if(StrEqual(arg2, "on"))
+		if(StrEqual(aa[1], "on"))
 		{
 			SetGod(user, true);
 			CPrintToChat(user, "{white}무적 {green}On");
 			god[user] = true;
+			if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용합니다.", user);
 		}
-		else if(StrEqual(arg2, "off"))
+		else if(StrEqual(aa[1], "off"))
 		{
 			SetGod(user, false);
 			CPrintToChat(user, "{white}무적 {green}Off");
 			god[user] = false;
+			if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용하지 않습니다.", user);
 		}
-		
-		if(user != client) CPrintToChat(client, "{white}%N님이 {green}무적{white}을 사용합니다.", user);
 	}
 	return Plugin_Handled;
 }
 
 public Action:Command_Stun(client, args)
 {
-	if(args != 3)
+	new String:arg[256], String:aa[3][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 3, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], "") || StrEqual(aa[2], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
 		return Plugin_Handled;
 	}
 	
-	decl String:arg[64], String:arg2[64], String:arg3[256];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	GetCmdArg(3, arg3, sizeof(arg3));
-	
-	if(StrEqual(arg3, "")) Format(arg3, 256, " ");
-	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -324,8 +321,8 @@ public Action:Command_Stun(client, args)
 		
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		
-		TF2_StunPlayer(user, StringToFloat(arg2), _, TF_STUNFLAGS_NORMALBONK);
-		CPrintToChat(user, "{green}%N님 {green}스턴 %i초 {white}%s", user, StringToInt(arg2), arg3);
+		TF2_StunPlayer(user, StringToFloat(aa[1]), _, TF_STUNFLAGS_NORMALBONK);
+		CPrintToChat(user, "{green}%N님 {green}스턴 %i초 {white}%s", user, StringToInt(aa[1]), aa[2]);
 		
 		if(user != client) CPrintToChat(client, "{white}%N님이 {green}스턴{white}을 받았습니다.", user);
 	}
@@ -334,20 +331,20 @@ public Action:Command_Stun(client, args)
 
 public Action:Command_Health(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_health <player> <amount>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[64], String:arg2[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	new health = StringToInt(arg2);
+	new health = StringToInt(aa[1]);
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -367,36 +364,36 @@ public Action:Command_Health(client, args)
 
 public Action:Command_Class(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_class <player> <1 ~ 9>");
 		return Plugin_Handled;
 	}
 	
-	decl String:arg[64], String:arg2[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	
 	new TFClassType:class;
 	
-	if(StrEqual(arg2, "1", false)) class = TFClass_Scout;
-	else if(StrEqual(arg2, "2", false)) class = TFClass_Soldier;
-	else if(StrEqual(arg2, "3", false)) class = TFClass_Pyro;
-	else if(StrEqual(arg2, "4", false)) class = TFClass_DemoMan;
-	else if(StrEqual(arg2, "5", false)) class = TFClass_Heavy;
-	else if(StrEqual(arg2, "6", false)) class = TFClass_Engineer;
-	else if(StrEqual(arg2, "7", false)) class = TFClass_Medic;
-	else if(StrEqual(arg2, "8", false)) class = TFClass_Sniper;
-	else if(StrEqual(arg2, "9", false)) class = TFClass_Spy;
+	if(StrEqual(aa[1], "1", false)) class = TFClass_Scout;
+	else if(StrEqual(aa[1], "2", false)) class = TFClass_Soldier;
+	else if(StrEqual(aa[1], "3", false)) class = TFClass_Pyro;
+	else if(StrEqual(aa[1], "4", false)) class = TFClass_DemoMan;
+	else if(StrEqual(aa[1], "5", false)) class = TFClass_Heavy;
+	else if(StrEqual(aa[1], "6", false)) class = TFClass_Engineer;
+	else if(StrEqual(aa[1], "7", false)) class = TFClass_Medic;
+	else if(StrEqual(aa[1], "8", false)) class = TFClass_Sniper;
+	else if(StrEqual(aa[1], "9", false)) class = TFClass_Spy;
 	else
 	{
-		ReplyToCommand(client, "[SM] Invalid Class (\"%s\")", arg2);
+		ReplyToCommand(client, "[SM] Invalid Class (\"%s\")", aa[1]);
 		return Plugin_Handled;
 	}
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -424,19 +421,17 @@ public Action:Command_Class(client, args)
 
 public Action:Command_Team(client, args)
 {
-	if (args != 2) 
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_team <player> <2,3>");
 		return Plugin_Handled;
 	}
-
-	decl String:arg[65];
-	GetCmdArg(1, arg, sizeof(arg));
 	
-	decl String:iTeam[6];
-	GetCmdArg(2, iTeam, sizeof(iTeam));
-	
-	new team = StringToInt(iTeam);
+	new team = StringToInt(aa[1]);
 	
 	if(team > 3)
 	{
@@ -446,7 +441,7 @@ public Action:Command_Team(client, args)
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -479,14 +474,14 @@ public Action:Command_Scramble(client, args)
 
 public Action:Command_Respawn(client, args)
 {
-	if(args != 1)
+	decl String:arg[64];
+	GetCmdArgString(arg, sizeof(arg));
+
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_respawn <player>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[64];
-	GetCmdArg(1, arg, sizeof(arg));
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
@@ -574,20 +569,19 @@ public Menu_PlayersList(Handle:menu, MenuAction:action, client, select)
 
 public Action:Command_Addcond(client, args)
 {
-	if(args != 3)
+	new String:arg[256], String:aa[3][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 3, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], "") || StrEqual(aa[2], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_cond <player> <condid> <duration>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:strCond[64], String:strDur[10];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, strCond, sizeof(strCond));
-	GetCmdArg(3, strDur, sizeof(strDur));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -598,8 +592,8 @@ public Action:Command_Addcond(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 
-		new Float:duration = StringToFloat(strDur);
-		new cond = StringToInt(strCond);
+		new Float:duration = StringToFloat(aa[2]);
+		new cond = StringToInt(aa[1]);
 		
 		TF2_AddCondition(user, TFCond:cond, duration);
 		if(user != client) CPrintToChat(client, "{white}%N님은 {green}치트{white}를 사용합니다.", user);
@@ -617,19 +611,19 @@ public Action:Command_Restart(client, args)
 
 public Action:Command_Rof(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_rof <player> <amount>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -639,7 +633,7 @@ public Action:Command_Rof(client, args)
 	{
 		new user = target_list[i];
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
-		rof[user] = StringToFloat(amount);
+		rof[user] = StringToFloat(aa[1]);
 		CPrintToChat(user, "{white} 공속 %.1f", rof[user]);
 		if(user != client) CPrintToChat(client, "{white}%N님의 {green}공속{white}이 변경되었습니다.", user);
 	}
@@ -648,15 +642,14 @@ public Action:Command_Rof(client, args)
 
 public Action:Command_SeeYou(client, args)
 {
-	if(args != 1)
+	decl String:arg[64];
+	GetCmdArgString(arg, sizeof(arg));
+
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_seeyou <player>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
@@ -681,19 +674,19 @@ public Action:Command_SeeYou(client, args)
 
 public Action:Command_Jump(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_jump <player>");
+		ReplyToCommand(client, "Usage: sm_jump <player> on / off");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -704,20 +697,20 @@ public Action:Command_Jump(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "on"))
+		if(StrEqual(aa[1], "on"))
 		{
 			jump[user] = true;
 			CPrintToChat(user, "{white}점프 모드 {green}On");
 			SetGod(user, true);
 		}
-		else if(StrEqual(amount, "off"))
+		else if(StrEqual(aa[1], "off"))
 		{
 			jump[user] = false;
 			CPrintToChat(user, "{white}점프 모드 {green}Off");
 			SetGod(user, false);
 		}
 		
-		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} %s", user, amount);
+		if(user != client) CPrintToChat(client, "{white}%N님 {green}점프 모드{white} %s", user, aa[1]);
 	}
 	
 	return Plugin_Handled;
@@ -746,14 +739,14 @@ public Action:Command_AddBot(client, args)
 
 public Action:Command_Party(client, args)
 {
-	if(args != 1)
+	decl String:arg[64];
+	GetCmdArgString(arg, sizeof(arg));
+
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_party <name>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[10];
-	GetCmdArg(1, arg, sizeof(arg));
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
@@ -794,18 +787,17 @@ public Action:Command_Pos(client, args)
 		ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
 		return Plugin_Handled;
 	}
+
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
 	
-	if(args != 2)
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
 		return Plugin_Handled;
 	}
-	
-	
-	decl String:szMsg[256], String:szLife[10];
-	GetCmdArg(1, szMsg, sizeof(szMsg));
-	GetCmdArg(2, szLife, sizeof(szLife)); 
-	
+
 	new Float:endPos[3];
 	GetCollisionPoint(client, endPos);
 	
@@ -813,7 +805,7 @@ public Action:Command_Pos(client, args)
 	{
 		if(IsValidClient(i))
 		{
-			Annotate(endPos, i, szMsg, 1, StringToFloat(szLife), -1);
+			Annotate(endPos, i, aa[0], 1, StringToFloat(aa[1]), -1);
 		}
 	}
 	return Plugin_Handled;
@@ -821,19 +813,19 @@ public Action:Command_Pos(client, args)
 
 public Action:Command_HeadSize(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_heads <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -844,7 +836,7 @@ public Action:Command_HeadSize(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 444);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 초기화", user);
@@ -852,9 +844,9 @@ public Action:Command_HeadSize(client, args)
 		}
 		else
 		{
-			TF2Attrib_SetByDefIndex(user, 444, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 머리 크기 {green}%1.f", client, StringToFloat(amount));
+			TF2Attrib_SetByDefIndex(user, 444, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 머리 크기 {green}%1.f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 머리 크기 {green}%1.f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -862,19 +854,19 @@ public Action:Command_HeadSize(client, args)
 
 public Action:Command_BodySize(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_bodys <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -885,7 +877,7 @@ public Action:Command_BodySize(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 620);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 초기화", user);
@@ -893,9 +885,9 @@ public Action:Command_BodySize(client, args)
 		}
 		else
 		{
-			TF2Attrib_SetByDefIndex(user, 620, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 크기 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 몸통 크기 {green}%1.f", client, StringToFloat(amount));
+			TF2Attrib_SetByDefIndex(user, 620, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸통 크기 {green}%1.f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 몸통 크기 {green}%1.f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -903,19 +895,19 @@ public Action:Command_BodySize(client, args)
 
 public Action:Command_HandSize(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_hands <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -926,7 +918,7 @@ public Action:Command_HandSize(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 699);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 초기화", user);
@@ -934,9 +926,9 @@ public Action:Command_HandSize(client, args)
 		}
 		else
 		{
-			TF2Attrib_SetByDefIndex(user, 699, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 손 크기 {green}%1.f", client, StringToFloat(amount));
+			TF2Attrib_SetByDefIndex(user, 699, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 손 크기 {green}%1.f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 손 크기 {green}%1.f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -944,19 +936,19 @@ public Action:Command_HandSize(client, args)
 
 public Action:Command_VoiceSpeed(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_voices <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -967,7 +959,7 @@ public Action:Command_VoiceSpeed(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 2048);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 초기화", user);
@@ -975,9 +967,9 @@ public Action:Command_VoiceSpeed(client, args)
 		}
 		else
 		{
-			TF2Attrib_SetByDefIndex(user, 2048, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%f", client, StringToFloat(amount));
+			TF2Attrib_SetByDefIndex(user, 2048, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 음성 속도 {green}%f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 음성 속도 {green}%f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -985,19 +977,19 @@ public Action:Command_VoiceSpeed(client, args)
 
 public Action:Command_TauntSpeed(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_taunts <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -1008,7 +1000,7 @@ public Action:Command_TauntSpeed(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 201);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 초기화", user);
@@ -1016,9 +1008,9 @@ public Action:Command_TauntSpeed(client, args)
 		}
 		else
 		{
-			TF2Attrib_SetByDefIndex(user, 201, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 도발 속도 {green}%1.f", client, StringToFloat(amount));
+			TF2Attrib_SetByDefIndex(user, 201, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 도발 속도 {green}%1.f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 도발 속도 {green}%1.f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -1026,19 +1018,19 @@ public Action:Command_TauntSpeed(client, args)
 
 public Action:Command_Size(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_size <player> <value>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -1049,7 +1041,7 @@ public Action:Command_Size(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			SetSize(user, 1.0);	
 			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 초기화", user);
@@ -1057,9 +1049,9 @@ public Action:Command_Size(client, args)
 		}
 		else
 		{
-			SetSize(user, StringToFloat(amount));
-			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 {green}%1.f", user, StringToFloat(amount));
-			else CPrintToChat(client, "{white}%N님의 몸 크기 {green}%1.f", client, StringToFloat(amount));
+			SetSize(user, StringToFloat(aa[1]));
+			if(user != client) CPrintToChat(user, "{white}%N님의 몸 크기 {green}%1.f", user, StringToFloat(aa[1]));
+			else CPrintToChat(client, "{white}%N님의 몸 크기 {green}%1.f", client, StringToFloat(aa[1]));
 		}
 	}
 	return Plugin_Handled;
@@ -1067,14 +1059,14 @@ public Action:Command_Size(client, args)
 
 public Action:Command_ResetSize(client, args)
 {
-	if(args != 1)
+	decl String:arg[65];
+	GetCmdArgString(arg, sizeof(arg));
+
+	if(StrEqual(arg, ""))
 	{
 		ReplyToCommand(client, "Usage: sm_resetsize <player>");
 		return Plugin_Handled;
 	}
-	
-	decl String:arg[65];
-	GetCmdArg(1, arg, sizeof(arg));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
@@ -1161,19 +1153,19 @@ public Action:one(Handle:timer)
 
 public Action:Command_NoAttack(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
-		ReplyToCommand(client, "Usage: sm_noattack <player>");
+		ReplyToCommand(client, "Usage: sm_noattack <player> <on / off>");
 		return Plugin_Handled;
 	}
 
-	decl String:arg[65], String:amount[64];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, amount, sizeof(amount));
-
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -1184,7 +1176,7 @@ public Action:Command_NoAttack(client, args)
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
 
-		if(StrEqual(amount, "off"))
+		if(StrEqual(aa[1], "off"))
 		{
 			TF2Attrib_RemoveByDefIndex(user, 821);	
 			if(user != client) CPrintToChat(user, "{white}%N님은 이제 공격 가능", user);
@@ -1202,19 +1194,19 @@ public Action:Command_NoAttack(client, args)
 
 public Action:Command_Whisper(client, args)
 {
-	if(args != 2)
+	new String:arg[256], String:aa[2][256];
+	GetCmdArgString(arg, sizeof(arg));
+	ExplodeString(arg, " ", aa, 2, 256);
+	
+	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
 	{
 		ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
 	}
 
-	decl String:arg[64], String:say[256];
-	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, say, sizeof(say));
-
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(aa[0], 0, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -1224,7 +1216,7 @@ public Action:Command_Whisper(client, args)
 	{
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
-		CPrintToChat(user, "\x07ADFF2F[귓속말] \x03%N: {white}%s", client, say);
+		CPrintToChat(user, "\x07ADFF2F[귓속말] \x03%N: {white}%s", client, aa[1]);
 	}
 	PrintToChat(client, "\x04전달되었습니다.");
 	return Plugin_Handled;
