@@ -78,7 +78,7 @@ public OnPluginStart()
 	AddMultiTargetFilter("@bb", blubots, "all blu bots", false)
 	
 	HookEvent("player_spawn", PlayerSpawn);
-	HookEvent("player_disconnect", 	OnPlayerDisconnect, EventHookMode_Pre);
+	HookEvent("player_disconnect", OnPlayerDisconnect, EventHookMode_Pre);
 	
 }
 
@@ -127,7 +127,7 @@ public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBro
 
 		new String:reason[64];
 		GetEventString(event, "reason", reason, sizeof(reason));
-		
+
 		if(StrContains(reason, "Timed out", false) != -1) CPrintToChatAll("{orange}%N{default} Timed out.", client);
 	}
 	return Plugin_Continue;
@@ -1215,7 +1215,7 @@ public Action:Command_Whisper(client, args)
 		if (!IsClientInGame(user)) return Plugin_Handled;
 		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, aa[1]);
 	}
-	PrintToChat(client, "%s\x07FFFFFF전달되었습니다.", FUCCA);
+	PrintToChat(client, "%s'%s' 라고 \x07FFFFFF전달되었습니다.", FUCCA, aa[1]);
 	return Plugin_Handled;
 }
 
@@ -1340,25 +1340,25 @@ stock Annotate(Float:pos[3], client, String:message[], offset = 0, Float:lifetim
 
 public bool:admin(const String:pattern[], Handle:clients)
 {
-	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsClientAdmin(i)) PushArrayCell(clients, i)
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsClientAdmin(i)) PushArrayCell(clients, i);
 	return true;
 }
 
 public bool:member(const String:pattern[], Handle:clients)
 {
-	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && party[i] == true) PushArrayCell(clients, i)
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && party[i] == true) PushArrayCell(clients, i);
 	return true;
 }
 
 public bool:redbots(const String:pattern[], Handle:clients)
 {
-	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 2) PushArrayCell(clients, i) 
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 2) PushArrayCell(clients, i);
 	return true;
 }
 
 public bool:blubots(const String:pattern[], Handle:clients)
 {
-	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 3) PushArrayCell(clients, i)
+	for (new i = 1; i <= MaxClients; i++) if(IsValidClient(i) && IsFakeClient(i) && GetClientTeam(i) == 3) PushArrayCell(clients, i);
 	return true;
 }
 
