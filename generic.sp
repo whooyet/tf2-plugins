@@ -28,7 +28,7 @@ public Plugin:myinfo =
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.4.2",
+	version = "1.4.5",
 	url = "googlehammer.com"
 }
 
@@ -56,7 +56,7 @@ public OnPluginStart()
 	RegAdminCmd("sm_bj", Command_BotJump, flag);
 	RegAdminCmd("sm_bot", Command_AddBot, flag);
 	RegAdminCmd("sm_party", Command_Party, flag);
-	RegAdminCmd("sm_pos", Command_Pos, flag);
+	RegAdminCmd("sm_ano", Command_Ano, flag);
 	
 	RegAdminCmd("sm_heads", Command_HeadSize, flag);
 	RegAdminCmd("sm_bodys", Command_BodySize, flag);
@@ -298,19 +298,20 @@ public Action:Command_God(client, args)
 
 public Action:Command_Stun(client, args)
 {
-	new String:arg[256], String:aa[3][256];
-	GetCmdArgString(arg, sizeof(arg));
-	ExplodeString(arg, " ", aa, 3, 256);
-	
-	if(StrEqual(aa[0], "") || StrEqual(aa[1], "") || StrEqual(aa[2], ""))
+	if(args != 3)
 	{
 		Fucca_ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
 		return Plugin_Handled;
 	}
 	
+	new String:arg[32], String:arg2[10], String:arg3[256];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	GetCmdArg(3, arg3, sizeof(arg3));
+	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(aa[0], client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -322,8 +323,8 @@ public Action:Command_Stun(client, args)
 		
 		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
 		
-		TF2_StunPlayer(user, StringToFloat(aa[1]), _, TF_STUNFLAGS_NORMALBONK);
-		CPrintToChat(user, "%s{green}%N님 {green}스턴 %i초 {white}%s", FUCCA, user, StringToInt(aa[1]), aa[2]);
+		TF2_StunPlayer(user, StringToFloat(arg2), _, TF_STUNFLAGS_NORMALBONK);
+		CPrintToChat(user, "%s{green}%N님 {green}스턴 %i초 {white}%s", FUCCA, user, StringToInt(arg2), arg3);
 		
 		if(user != client) CPrintToChat(client, "%s{white}%N님이 {green}스턴{white}을 받았습니다.", FUCCA, user);
 	}
@@ -780,23 +781,23 @@ public Action:Command_Party(client, args)
 	return Plugin_Handled;
 } 
 
-public Action:Command_Pos(client, args)
-{
+public Action:Command_Ano(client, args)
+{	
+	if(args != 2)
+	{
+		Fucca_ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
+		return Plugin_Handled;
+	}
+	
 	if(!IsPlayerAlive(client))
 	{
 		Fucca_ReplyToCommand(client, "살아 있지 않는 상태에선 불가능합니다.");
 		return Plugin_Handled;
 	}
-
-	new String:arg[256], String:aa[2][256];
-	GetCmdArgString(arg, sizeof(arg));
-	ExplodeString(arg, " ", aa, 2, 256);
 	
-	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
-	{
-		Fucca_ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
-		return Plugin_Handled;
-	}
+	new String:arg[256], String:arg2[10];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
 
 	new Float:endPos[3];
 	GetCollisionPoint(client, endPos);
@@ -805,7 +806,7 @@ public Action:Command_Pos(client, args)
 	{
 		if(IsValidClient(i))
 		{
-			Annotate(endPos, i, aa[0], 1, StringToFloat(aa[1]), -1);
+			Annotate(endPos, i, arg, 1, StringToFloat(arg2), -1);
 		}
 	}
 	return Plugin_Handled;
@@ -1191,19 +1192,19 @@ public Action:Command_NoAttack(client, args)
 
 public Action:Command_Whisper(client, args)
 {
-	new String:arg[256], String:aa[2][256];
-	GetCmdArgString(arg, sizeof(arg));
-	ExplodeString(arg, " ", aa, 2, 256);
-	
-	if(StrEqual(aa[0], "") || StrEqual(aa[1], ""))
+	if(args != 2)
 	{
 		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
 	}
+	
+	new String:arg[32], String:arg2[256];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
 
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
-	if ((target_count = ProcessTargetString(aa[0], 0, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	if ((target_count = ProcessTargetString(arg, 0, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
@@ -1213,9 +1214,9 @@ public Action:Command_Whisper(client, args)
 	{
 		new user = target_list[i];
 		if (!IsClientInGame(user)) return Plugin_Handled;
-		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, aa[1]);
+		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, arg2);
 	}
-	PrintToChat(client, "%s'%s' 라고 \x07FFFFFF전달되었습니다.", FUCCA, aa[1]);
+	PrintToChat(client, "%s\x07FFFFFF'\x04s\x07FFFFFF' 라고 전달되었습니다.", FUCCA, arg2);
 	return Plugin_Handled;
 }
 
