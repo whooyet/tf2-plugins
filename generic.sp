@@ -298,7 +298,7 @@ public Action:Command_God(client, args)
 
 public Action:Command_Stun(client, args)
 {
-	if(args != 3)
+	if(args < 3)
 	{
 		Fucca_ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
 		return Plugin_Handled;
@@ -307,13 +307,25 @@ public Action:Command_Stun(client, args)
 	new String:arg[32], String:arg2[10], String:arg3[256];
 	GetCmdArg(1, arg, sizeof(arg));
 	GetCmdArg(2, arg2, sizeof(arg2));
-	GetCmdArg(3, arg3, sizeof(arg3));
 	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
 	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+	
+	GetCmdArgString(arg3, sizeof(arg3));
+	ReplaceString(arg3, 255, arg, "");
+	// ReplaceString(arg3, 255, arg2, "");
+	
+	TrimString(arg3);
+	StripQuotes(arg3);
+	
+	if (!arg3[0])
+	{
+		Fucca_ReplyToCommand(client, "Usage: sm_stun <player> <time> <message>");
 		return Plugin_Handled;
 	}
 		
@@ -1192,21 +1204,32 @@ public Action:Command_NoAttack(client, args)
 
 public Action:Command_Whisper(client, args)
 {
-	if(args != 2)
+	if(args < 2)
 	{
 		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
 	}
 	
-	new String:arg[32], String:arg2[256];
+	decl String:arg[64], String:arg2[256];
 	GetCmdArg(1, arg, sizeof(arg));
-	GetCmdArg(2, arg2, sizeof(arg2));
-
+	
 	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 		
 	if ((target_count = ProcessTargetString(arg, 0, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
 	{
 		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+	
+	GetCmdArgString(arg2, sizeof(arg2));
+	ReplaceString(arg2, 255, arg, "");
+	
+	TrimString(arg2);
+	StripQuotes(arg2);
+	
+	if (!arg2[0])
+	{
+		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
 	}
 		
@@ -1216,7 +1239,7 @@ public Action:Command_Whisper(client, args)
 		if (!IsClientInGame(user)) return Plugin_Handled;
 		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, arg2);
 	}
-	PrintToChat(client, "%s\x07FFFFFF'\x04s\x07FFFFFF' 라고 전달되었습니다.", FUCCA, arg2);
+	PrintToChat(client, "%s\x07FFFFFF'\x04%s\x07FFFFFF' 라고 전달되었습니다.", FUCCA, arg2);
 	return Plugin_Handled;
 }
 
