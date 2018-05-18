@@ -1204,7 +1204,7 @@ public Action:Command_NoAttack(client, args)
 
 public Action:Command_Whisper(client, args)
 {
-	if(args < 2)
+	if(args != 2)
 	{
 		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
 		return Plugin_Handled;
@@ -1212,34 +1212,14 @@ public Action:Command_Whisper(client, args)
 	
 	decl String:arg[64], String:arg2[256];
 	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
 	
-	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
-		
-	if ((target_count = ProcessTargetString(arg, 0, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
-	{
-		ReplyToTargetError(client, target_count);
-		return Plugin_Handled;
-	}
+	new target = FindTarget(client, arg, true, true);
 	
-	GetCmdArgString(arg2, sizeof(arg2));
-	ReplaceString(arg2, 255, arg, "");
-	
-	TrimString(arg2);
-	StripQuotes(arg2);
-	
-	if (!arg2[0])
-	{
-		Fucca_ReplyToCommand(client, "Usage: sm_wr <player> <say>");
-		return Plugin_Handled;
-	}
-		
-	for (new i = 0; i < target_count; i++)
-	{
-		new user = target_list[i];
-		if (!IsClientInGame(user)) return Plugin_Handled;
-		CPrintToChat(user, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, arg2);
-	}
-	PrintToChat(client, "%s\x07FFFFFF'\x04%s\x07FFFFFF' 라고 전달되었습니다.", FUCCA, arg2);
+	if(!IsValidClient(target)) return Plugin_Handled;
+
+	CPrintToChat(target, "%s\x07ADFF2F[귓속말] \x03%N: {white}%s", FUCCA, client, arg);
+	CPrintToChat(client, "%s\x03%N {white}님에게 '{Green}%s{white}' 라고 전달되었습니다.", FUCCA, target, arg);
 	return Plugin_Handled;
 }
 
