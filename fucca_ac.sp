@@ -52,7 +52,7 @@ public Action:aaa(client, args)
 		
 		BuildPath(Path_SM, FileName, sizeof(FileName), "data/ac/%s.txt", temp[0]);
 		
-		Format(buffer, sizeof(buffer), "%s %s http://steamcommunity.com/profiles/%s", daydayday(), SteamID, Steam64);
+		Format(buffer, sizeof(buffer), "%s %s http://steamcommunity.com/profiles/%s %N", daydayday(), SteamID, Steam64, client);
 		
 		new Handle:log = OpenFile(FileName, "a+");
 		if(log != INVALID_HANDLE)
