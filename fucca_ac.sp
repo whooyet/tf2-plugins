@@ -75,7 +75,12 @@ public Action:aaa(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Timer(Handle:Timer, any:client) if(IsClientAdmin(client)) check[client] = true;
+public Action:Timer(Handle:Timer, any:client)
+{
+	if(!PlayerCheck(client)) return Plugin_Stop;
+	if(IsClientAdmin(client)) check[client] = true;
+	return Plugin_Continue;
+}
 
 stock bool:overlap(client)
 {
@@ -128,5 +133,16 @@ stock bool:IsClientAdmin(client)
 	Cl_ID = GetUserAdmin(client);
 	if(Cl_ID != INVALID_ADMIN_ID)
 		return true;
+	return false;
+}
+
+stock bool:PlayerCheck(Client){
+	if(Client > 0 && Client <= MaxClients){
+		if(IsClientConnected(Client) == true){
+			if(IsClientInGame(Client) == true){
+				return true;
+			}
+		}
+	}
 	return false;
 }
