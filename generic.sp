@@ -28,7 +28,7 @@ public Plugin:myinfo =
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.4.5",
+	version = "1.4.6",
 	url = "googlehammer.com"
 }
 
@@ -36,46 +36,46 @@ public OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	
-	RegAdminCmd("sm_bring", Command_bring, flag);
-	RegAdminCmd("sm_goto", Command_Goto, flag);
-	RegAdminCmd("sm_warp", Command_Warp, flag);
-	RegAdminCmd("sm_cri", Command_Crits, flag);
-	RegAdminCmd("sm_god", Command_God, flag);
-	RegAdminCmd("sm_stun", Command_Stun, flag);
-	RegAdminCmd("sm_hp", Command_Health, flag);
-	RegAdminCmd("sm_class", Command_Class, flag);
-	RegAdminCmd("sm_team", Command_Team, flag);
-	RegAdminCmd("sm_scramble", Command_Scramble, flag);
-	RegAdminCmd("sm_spawn", Command_Respawn, flag);
-	RegAdminCmd("sm_players", Command_Players, flag);
-	RegAdminCmd("sm_cond", Command_Addcond, flag);
-	RegAdminCmd("sm_restart", Command_Restart, flag);
-	RegAdminCmd("sm_rof", Command_Rof, flag);
-	RegAdminCmd("sm_seeyou", Command_SeeYou, flag);
-	RegAdminCmd("sm_jump", Command_Jump, flag);
-	RegAdminCmd("sm_bj", Command_BotJump, flag);
-	RegAdminCmd("sm_bot", Command_AddBot, flag);
-	RegAdminCmd("sm_party", Command_Party, flag);
-	RegAdminCmd("sm_ano", Command_Ano, flag);
+	RegAdminCmd("sm_bring", Command_bring, flag, "플레이어를 데려옵니다.");
+	RegAdminCmd("sm_goto", Command_Goto, flag, "플레이어에게 갑니다.");
+	RegAdminCmd("sm_warp", Command_Warp, flag, "에임 둔 곳으로 이동합니다.");
+	RegAdminCmd("sm_cri", Command_Crits, flag, "크리티컬을 킵니다.");
+	RegAdminCmd("sm_god", Command_God, flag, "무적이됩니다. (buddha mod)");
+	RegAdminCmd("sm_stun", Command_Stun, flag, "스턴에 걸리게합니다.");
+	RegAdminCmd("sm_hp", Command_Health, flag, "체력을 조절합니다.");
+	RegAdminCmd("sm_class", Command_Class, flag, "클래스를 변경합니다.");
+	RegAdminCmd("sm_team", Command_Team, flag, "팀을 변경합니다.");
+	RegAdminCmd("sm_scramble", Command_Scramble, flag, "팀을 섞습니다.");
+	RegAdminCmd("sm_spawn", Command_Respawn, flag, "리스폰합니다.");
+	RegAdminCmd("sm_players", Command_Players, flag, "접속된 유저의 정보를 볼 수 있습니다.");
+	RegAdminCmd("sm_cond", Command_Addcond, flag, "치트를 사용합니다. (치트 번호)");
+	RegAdminCmd("sm_restart", Command_Restart, flag, "라운드를 재시작합니다.");
+	RegAdminCmd("sm_rof", Command_Rof, flag, "공속을 조절할 수 있습니다.");
+	RegAdminCmd("sm_seeyou", Command_SeeYou, flag, "특정 타겟의 행동을 확인합니다 (Reload Key)");
+	RegAdminCmd("sm_jump", Command_Jump, flag, "솔저, 데모맨 유저에게 탄약과 무적으로 점프에 도움을 줍니다.");
+	RegAdminCmd("sm_bj", Command_BotJump, flag, "모든 봇에게 점프모드를 적용합니다.");
+	RegAdminCmd("sm_bot", Command_AddBot, flag, "봇을 스폰합니다.");
+	RegAdminCmd("sm_party", Command_Party, flag, "@party와 함께 사용합니다.");
+	RegAdminCmd("sm_ano", Command_Ano, flag, "에임 둔 곳에 메세지를 띄울 수 있습니다.");
 	
-	RegAdminCmd("sm_heads", Command_HeadSize, flag);
-	RegAdminCmd("sm_bodys", Command_BodySize, flag);
-	RegAdminCmd("sm_hands", Command_HandSize, flag);
-	RegAdminCmd("sm_voices", Command_VoiceSpeed, flag);
-	RegAdminCmd("sm_taunts", Command_TauntSpeed, flag);
-	RegAdminCmd("sm_size", Command_Size, flag);
-	RegAdminCmd("sm_resetsize", Command_ResetSize, flag);
+	RegAdminCmd("sm_heads", Command_HeadSize, flag, "머리 크기를 조절할 수 있습니다.");
+	RegAdminCmd("sm_bodys", Command_BodySize, flag, "몸이 길어지거나 짧아지거나 할 수 있습니다.");
+	RegAdminCmd("sm_hands", Command_HandSize, flag, "손의 크기를 조절할 수 있습니다. (무기에도 영향이 끼칩니다.)");
+	RegAdminCmd("sm_voices", Command_VoiceSpeed, flag, "목소리의 굵기를 조절할 수 있습니다.");
+	RegAdminCmd("sm_taunts", Command_TauntSpeed, flag, "도발 속도를 변경할 수 있습니다.");
+	RegAdminCmd("sm_size", Command_Size, flag, "전체적으로 몸이 커지거나 작아지거나 조절할 수 있습니다.");
+	RegAdminCmd("sm_resetsize", Command_ResetSize, flag, "변경된 몸의 크기를 초기화합니다.");
 	
 	// RegAdminCmd("sm_randomp", Command_RandomPlayer, flag);
-	RegAdminCmd("sm_3", Command_ThreeSec, flag);
-	RegAdminCmd("sm_noattack", Command_NoAttack, flag);
+	RegAdminCmd("sm_3", Command_ThreeSec, flag, "3초 셉니다.");
+	RegAdminCmd("sm_noattack", Command_NoAttack, flag, "공격할 수 없도록 합니다.");
 	
-	RegConsoleCmd("sm_wr", Command_Whisper);
+	RegConsoleCmd("sm_wr", Command_Whisper, "귓속말 할 수 있습니다.");
 	
-	AddMultiTargetFilter("@admin", admin, "all admin", false)
-	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false)
-	AddMultiTargetFilter("@rb", redbots, "all red bots", false)
-	AddMultiTargetFilter("@bb", blubots, "all blu bots", false)
+	AddMultiTargetFilter("@admin", admin, "all admin", false) // 모든 어드민
+	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false) // 모든 파티원
+	AddMultiTargetFilter("@rb", redbots, "all red bots", false) //모든 레드봇
+	AddMultiTargetFilter("@bb", blubots, "all blu bots", false) //모든 블루 봇
 	
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("player_disconnect", OnPlayerDisconnect, EventHookMode_Pre);
@@ -516,8 +516,16 @@ public Action:Command_Respawn(client, args)
 
 public Action:Command_Players(client, args)
 {
-	new Handle:menu = CreateMenu(Menu_PlayersList);
-	SetMenuTitle(menu, "플레이어 목록");
+	new String:Search[64]
+	GetCmdArgString(Search, sizeof(Search));
+	PlayerMenu(client, Search);
+	return Plugin_Handled;
+}
+
+public PlayerMenu(client, String:Search[])
+{
+	new Handle:menu = CreateMenu(Menu_PlayersList), count;
+	SetMenuTitle(menu, "플레이어 목록 (Search On)");
 	for(new i=1; i<=GetMaxClients(); i++)
 	{
 		if(IsValidClient(i) && !IsFakeClient(i))
@@ -527,56 +535,64 @@ public Action:Command_Players(client, args)
 			
 			if(IsClientAdmin(i)) Format(display, sizeof(display), "[어드민] %N", i);
 			else Format(display, sizeof(display), "%N", i);
-			AddMenuItem(menu, info, display);
+			
+			if(StrContains(display, Search, false) > -1)
+			{
+				AddMenuItem(menu, info, display);
+				count++;
+			}
 		}
 	}
+	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 60);
-	return Plugin_Handled;
 }
-
-public Action:Player_Profile(client, user)
-{
-	decl String:SteamID[32];
-	GetClientAuthId(user, AuthId_Steam2, SteamID, sizeof(SteamID));
-	
-	new Handle:info = CreateMenu(Menu_PlayersList);
-
-	SetMenuTitle(info, "%N", user);
-	
-	AddMenuItem(info, "1", SteamID, ITEMDRAW_DISABLED); 
-
-	new String:temp[32];
-	Format(temp, sizeof(temp), "profile_%i", user);
-	
-	AddMenuItem(info, temp, "프로필");  
-	
-	SetMenuExitButton(info, true);
-
-	DisplayMenu(info, client, 60);
-} 
 
 public Menu_PlayersList(Handle:menu, MenuAction:action, client, select)
 {
 	if(action == MenuAction_Select)
 	{
-		decl String:info[100], String:Steam64[32], String:aa[2][64]; new String:url[256];
+		decl String:info[8];
 		GetMenuItem(menu, select, info, sizeof(info))
-		ExplodeString(info, "_", aa,2,64);
+		new user = StringToInt(info);
+		
+		new Handle:menu2 = CreateMenu(Menu_PlayersInfo);
+		SetMenuTitle(menu2, "%N", user);
 
-		if(StrEqual(aa[0], "profile")) 
-		{
-			new user = StringToInt(aa[1])
-			GetClientAuthId(user, AuthId_SteamID64, Steam64, sizeof(Steam64));
-			Format(url, sizeof(url), "http://steamcommunity.com/profiles/%s", Steam64);
-			motd(client, url);
-		}
-		else 
-		{
-			new user = StringToInt(info);
-			Player_Profile(client, user);
-		}
+		new String:Steam2[32], String:Steam64[32], String:temp[100], String:playtime[100], String:id[256];
+		
+		GetClientAuthId(user, AuthId_Steam2, Steam2, sizeof(Steam2));
+		GetClientAuthId(user, AuthId_SteamID64, Steam64, sizeof(Steam64));
+		
+		Format(temp, sizeof(temp), "http://steamcommunity.com/profiles/%s", Steam64);
+		Format(playtime, sizeof(playtime), "https://steamcommunity.com/profiles/%s/stats/TF2", Steam64);
+		Format(id, sizeof(id), "%s%\x0733ccff%N\x07FFFFFF 님의 고유번호: \x07ff9966%s\n\x07ff9966https://steamcommunity.com/profiles/%s/", FUCCA, user, Steam2, Steam64);
+		
+		AddMenuItem(menu2, temp, "스팀 프로필 이동");  
+		AddMenuItem(menu2, playtime, "클래스 플탐 확인");  
+		AddMenuItem(menu2, id, "고유번호와 주소 확인");  
+		
+		SetMenuExitBackButton(menu2, true);
+		SetMenuExitButton(menu2, true);
+
+		DisplayMenu(menu2, client, 60);
 	}
+	else if(action == MenuAction_Cancel) if(select == MenuCancel_ExitBack) PlayerMenu(client, "");
+	else if(action == MenuAction_End) CloseHandle(menu);
+}
+
+public Menu_PlayersInfo(Handle:menu, MenuAction:action, client, select)
+{
+	if(action == MenuAction_Select)
+	{
+		decl String:info[256];
+		GetMenuItem(menu, select, info, sizeof(info))
+		
+		if(select == 0) motd(client, info);
+		else if(select == 1) motd(client, info);
+		else if(select == 2) PrintToChat(client, info);
+	}
+	else if(action == MenuAction_Cancel) if(select == MenuCancel_ExitBack) PlayerMenu(client, "");
 	else if(action == MenuAction_End) CloseHandle(menu);
 }
 
@@ -797,7 +813,7 @@ public Action:Command_Ano(client, args)
 {	
 	if(args != 2)
 	{
-		Fucca_ReplyToCommand(client, "Usage: sm_pos <msg> <life time>");
+		Fucca_ReplyToCommand(client, "Usage: sm_ano <msg> <life time>");
 		return Plugin_Handled;
 	}
 	
@@ -814,13 +830,7 @@ public Action:Command_Ano(client, args)
 	new Float:endPos[3];
 	GetCollisionPoint(client, endPos);
 	
-	for(new i = 1; i <= MaxClients; i++)
-	{
-		if(IsValidClient(i))
-		{
-			Annotate(endPos, i, arg, 1, StringToFloat(arg2), -1);
-		}
-	}
+	for(new i = 1; i <= MaxClients; i++) if(IsValidClient(i)) Annotate(endPos, i, arg, 1, StringToFloat(arg2), -1);
 	return Plugin_Handled;
 }
 
