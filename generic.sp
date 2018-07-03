@@ -20,6 +20,7 @@ new bool:god[MAXPLAYERS+1];
 new bool:jump[MAXPLAYERS+1];
 new bool:bjump[MAXPLAYERS+1];
 new bool:party[MAXPLAYERS+1];
+new Float:sPos[MAXPLAYERS+1][2][3];
 
 new sec;
 
@@ -71,6 +72,8 @@ public OnPluginStart()
 	RegAdminCmd("sm_noattack", Command_NoAttack, flag, "공격할 수 없도록 합니다.");
 	
 	RegConsoleCmd("sm_wr", Command_Whisper, "귓속말 할 수 있습니다.");
+	RegAdminCmd("sm_s", Command_SetOrigin, flag, "위치를 저장합니다.");
+	RegAdminCmd("sm_t", Command_Teleport, flag, "위치에 텔레포트합니다.");
 	
 	AddMultiTargetFilter("@admin", admin, "all admin", false) // 모든 어드민
 	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false) // 모든 파티원
@@ -108,6 +111,13 @@ public OnClientPutInServer(client)
 	if(jump[client]) jump[client] = false;
 	if(bjump[client]) bjump[client] = false;
 	if(party[client]) party[client] = false;
+	
+	for(new i = 0; i <= 2; i++)
+	{
+		sPos[client][0][i] = 0.0;
+		sPos[client][1][i] = 0.0;
+	}
+		
 }
 
 public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -122,7 +132,7 @@ public Action:OnPlayerDisconnect(Handle:event, const String:name[], bool:dontBro
 	
 	if(IsValidClient(client))
 	{
-		decl String:steamID[24];
+		decl String:steamID[64];
 		GetClientAuthId(client, AuthId_Steam2, steamID, sizeof(steamID));
 
 		new String:reason[64];
@@ -1233,6 +1243,27 @@ public Action:Command_Whisper(client, args)
 	return Plugin_Handled;
 }
 
+public Action:Command_SetOrigin(client, args)
+{
+	GetClientAbsOrigin(client, sPos[client][0]);
+	GetClientAbsAngles(client, sPos[client][1]);
+	
+	CPrintToChat(client, "%s{white} 저장되었습니다.", FUCCA);
+	return Plugin_Handled;
+}
+
+public Action:Command_Teleport(client, args)
+{
+	if(sPos[client][0][0] == 0.0)
+	{
+		CPrintToChat(client, "%s{white} 저장된 위치가 없습니다.", FUCCA);
+		return Plugin_Handled;
+	}
+	TeleportEntity(client, sPos[client][0], sPos[client][1], NULL_VECTOR);
+	CPrintToChat(client, "%s{white} 텔포!", FUCCA);
+	return Plugin_Handled;
+}
+
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
 {
 	new index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
@@ -1243,6 +1274,9 @@ public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &boo
 			if(TF2_GetPlayerClass(client) == TFClassType:TFClass_Soldier || TF2_GetPlayerClass(client) == TFClassType:TFClass_DemoMan)
 			{
 				if(index != 730) SetEntProp(weapon, Prop_Send, "m_iClip1", 5);
+				
+				new type = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
+				if (type != -1) SetEntProp(client, Prop_Send, "m_iAmmo", 200, _, type);
 			}
 			else if(TF2_GetPlayerClass(client) == TFClassType:TFClass_Engineer) SetEntProp(client, Prop_Data, "m_iAmmo", 999, 4, 3);
 		}
