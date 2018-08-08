@@ -10,7 +10,7 @@
 #include <gmg\misc>
 
 #define flag ADMFLAG_KICK 
-#define FUCCA "\x07FF1493[뿌까] "
+#define FUCCA "\x0700ccff[뿌까] "
 // #define flag 0
 
 new Float:rof[MAXPLAYERS+1];
@@ -29,7 +29,7 @@ public Plugin:myinfo =
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.4.6",
+	version = "1.5.0",
 	url = "googlehammer.com"
 }
 
@@ -74,6 +74,7 @@ public OnPluginStart()
 	RegConsoleCmd("sm_wr", Command_Whisper, "귓속말 할 수 있습니다.");
 	RegAdminCmd("sm_s", Command_SetOrigin, flag, "위치를 저장합니다.");
 	RegAdminCmd("sm_t", Command_Teleport, flag, "위치에 텔레포트합니다.");
+	RegAdminCmd("sm_att", Command_Attribute, flag, "att 옵션넣기");
 	
 	AddMultiTargetFilter("@admin", admin, "all admin", false) // 모든 어드민
 	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false) // 모든 파티원
@@ -1264,6 +1265,90 @@ public Action:Command_Teleport(client, args)
 	return Plugin_Handled;
 }
 
+public Action:Command_Attribute(client, args)
+{
+	if(args < 5)
+	{
+		Fucca_ReplyToCommand(client, "Usage: sm_att <player> <0 ~ 3> <att num> <value>");
+		Fucca_ReplyToCommand(client, "0 = Primary  | 1 = Secondary | 2 = Melee  | 3 = body");
+		Fucca_ReplyToCommand(client, "ex) !att @me 3 26 55 3");
+		return Plugin_Handled;
+	}
+	
+	new String:arg[32], String:arg2[10], String:arg3[10], String:arg4[10], String:arg5[10];
+	GetCmdArg(1, arg, sizeof(arg));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	GetCmdArg(3, arg3, sizeof(arg3));
+	GetCmdArg(4, arg4, sizeof(arg4));
+	GetCmdArg(5, arg5, sizeof(arg5));
+	
+	decl  String:target_name[MAX_TARGET_LENGTH], target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+		
+	if ((target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+	
+	if(StrEqual(arg2, "") || StrEqual(arg3, "") || StrEqual(arg4, "") || StrEqual(arg5, ""))
+	{
+		Fucca_ReplyToCommand(client, "Usage: sm_att <player> <0 = Primary  | 1 = Secondary | 2 = Melee  | 3 = body> <att num> <value> <time>");
+		return Plugin_Handled;
+	}
+		
+	for (new i = 0; i < target_count; i++)
+	{
+		new user = target_list[i];
+		
+		if (!IsClientInGame(user) && !IsPlayerAlive(user)) return Plugin_Handled;
+		
+		if(StringToInt(arg2) == 3)
+		{
+			TF2Attrib_SetByDefIndex(user, StringToInt(arg3), StringToFloat(arg4));
+			Attribute(user, StringToInt(arg3), StringToFloat(arg5));
+		}
+		else
+		{
+			new weapon = GetPlayerWeaponSlot(user, StringToInt(arg2));
+			if(IsValidEntity(weapon))
+			{
+				TF2Attrib_SetByDefIndex(weapon, StringToInt(arg3), StringToFloat(arg4));
+				Attribute(weapon, StringToInt(arg3), StringToFloat(arg5));
+			}
+		}
+		
+		CPrintToChat(user, "%s{green}%N님 {green}적용되었습니다.", FUCCA, user);
+		if(user != client) CPrintToChat(client, "%s{white}%N님에게 적용하였습니다.", FUCCA, user);
+	}
+	return Plugin_Handled;
+}
+
+stock Attribute(index, att, Float:time)
+{
+	new Handle:hTemp;
+	CreateDataTimer(time, att_remove, hTemp, TIMER_FLAG_NO_MAPCHANGE | TIMER_DATA_HNDL_CLOSE);
+	WritePackCell(hTemp, index);
+	WritePackCell(hTemp, att);
+}
+
+public Action:att_remove(Handle:hTimer, Handle:hPack)
+{
+	ResetPack(hPack);
+	new client = ReadPackCell(hPack);
+	new att = ReadPackCell(hPack);
+	if(IsValidEntity(client) || IsValidClient(client)) yesbaby(client, att);
+}
+
+stock yesbaby(client, index)
+{
+	new Address:pAttrib = TF2Attrib_GetByDefIndex(client, index);
+	if(IsValidAddress(Address:pAttrib))
+	{
+		new idx = TF2Attrib_GetDefIndex(pAttrib);
+		if(idx == index) TF2Attrib_RemoveByDefIndex(client, index);
+	}
+}
+
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
 {
 	new index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
@@ -1425,4 +1510,19 @@ stock bool:IsClientAdmin(client)
 	if(Cl_ID != INVALID_ADMIN_ID)
 		return true;
 	return false;
+}
+
+stock bool IsValidAddress(Address pAddress)
+{
+	static Address Address_MinimumValid = view_as<Address>(0x10000);
+	if (pAddress == Address_Null)
+		return false;
+	return unsigned_compare(view_as<int>(pAddress), view_as<int>(Address_MinimumValid)) >= 0;
+}
+stock int unsigned_compare(int a, int b) {
+	if (a == b)
+		return 0;
+	if ((a >>> 31) == (b >>> 31))
+		return ((a & 0x7FFFFFFF) > (b & 0x7FFFFFFF)) ? 1 : -1;
+	return ((a >>> 31) > (b >>> 31)) ? 1 : -1;
 }
