@@ -29,7 +29,7 @@ public Plugin:myinfo =
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.5.0",
+	version = "1.5.1",
 	url = "googlehammer.com"
 }
 
@@ -1336,17 +1336,7 @@ public Action:att_remove(Handle:hTimer, Handle:hPack)
 	ResetPack(hPack);
 	new client = ReadPackCell(hPack);
 	new att = ReadPackCell(hPack);
-	if(IsValidEntity(client) || IsValidClient(client)) yesbaby(client, att);
-}
-
-stock yesbaby(client, index)
-{
-	new Address:pAttrib = TF2Attrib_GetByDefIndex(client, index);
-	if(IsValidAddress(Address:pAttrib))
-	{
-		new idx = TF2Attrib_GetDefIndex(pAttrib);
-		if(idx == index) TF2Attrib_RemoveByDefIndex(client, index);
-	}
+	if(IsValidEntity(client) || IsValidClient(client)) TF2Attrib_RemoveByDefIndex(client, att);
 }
 
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
