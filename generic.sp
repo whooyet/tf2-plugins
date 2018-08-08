@@ -1269,7 +1269,7 @@ public Action:Command_Attribute(client, args)
 {
 	if(args < 5)
 	{
-		Fucca_ReplyToCommand(client, "Usage: sm_att <player> <0 ~ 3> <att num> <value>");
+		Fucca_ReplyToCommand(client, "Usage: sm_att <player> <0 ~ 3> <att num> <value> <time>");
 		Fucca_ReplyToCommand(client, "0 = Primary  | 1 = Secondary | 2 = Melee  | 3 = body");
 		Fucca_ReplyToCommand(client, "ex) !att @me 3 26 55 3");
 		return Plugin_Handled;
