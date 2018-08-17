@@ -1,10 +1,11 @@
-#include <chat-processor>
+// #include <chat-processor>
+#include <matchrecorder>
 
 new bool:tag[33];
 
 public Plugin myinfo = 
 {
-	name = "고인물",
+	name = "새싹반 태그",
 	author = "뿌까",
 	description = "하하하하",
 	version = "1.0",
@@ -93,10 +94,40 @@ public OnClientPostAdminCheck(client)
 	// return Plugin_Handled;
 }
 
-public Action: CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
+// public Action: CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
+// {
+	// if(tag[author]) Format(name, MAXLENGTH_NAME, "\x04[새싹반] \x03%s", name);
+	// return Plugin_Changed;
+// }
+
+public Action:OnPlayerRunCmd(client, &buttons)
 {
-	if(tag[author]) Format(name, MAXLENGTH_NAME, "\x04[고인물] \x03%s", name);
-	return Plugin_Changed;
+	if(IsFucca()) return Plugin_Continue;
+	if(buttons & IN_SCORE) return Plugin_Continue;
+	
+	new count = 0, top[10], String:temp[32];
+	SetHudTextParams(0.1, 0.1, 0.1, 150, 150, 0, 150, 0, 0.0, 0.0, 0.0);
+		
+	for(new i = 1; i <= MaxClients; i++)
+	{
+		if(PlayerCheck(i) && tag[i])
+		{
+			top[count] = i;
+			count++;
+		}
+	}
+	Format(temp ,sizeof(temp), "새싹반 : \n");
+	
+	if(count == 1) ShowHudText(client, 1, "%s\n%N", temp, top[0]);
+	else if(count == 2) ShowHudText(client, 1, "%s\n%N\n%N", temp, top[0], top[1]);
+	else if(count == 3) ShowHudText(client, 1, "%s\n%N\n%N\n%N", temp, top[0], top[1], top[2]);
+	else if(count == 4) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3]);
+	else if(count == 5) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3], top[4]);
+	else if(count == 6) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3], top[4], top[5]);
+	else if(count == 7) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3], top[4], top[5], top[6]);
+	else if(count == 8) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3], top[4], top[5], top[6], top[7]);
+	else if(count == 9) ShowHudText(client, 1, "%s\n%N\n%N\n%N\n%N\n%N\n%N\n%N\n%N\n%N", temp, top[0], top[1], top[2], top[3], top[4], top[5], top[6], top[7],top[8]);
+	return Plugin_Continue;
 }
 
 stock bool:PlayerCheck(Client){
