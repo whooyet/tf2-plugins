@@ -22,8 +22,54 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 }
 
-public TF2_OnWaitingForPlayersStart() g_bWaitingForPlayers = true;
+public OnMapStart()
+{
+	red = TFClass_Unknown;
+	blu = TFClass_Unknown;
+}
+
+public TF2_OnWaitingForPlayersStart()
+{
+	g_bWaitingForPlayers = true;
+	red = TFClass_Unknown;
+	blu = TFClass_Unknown;
+}
+
 public TF2_OnWaitingForPlayersEnd() g_bWaitingForPlayers = false;
+
+public Action:hook_JoinClass(client, const String:command[], argc)
+{
+	if(g_bWaitingForPlayers) return Plugin_Continue;
+	if(red == TFClass_Unknown || blu == TFClass_Unknown) return Plugin_Continue;
+	
+	decl String:cmd1[32];
+	
+	if(argc < 1) return Plugin_Handled;
+	
+	GetCmdArg(1, cmd1, sizeof(cmd1));
+	
+	if(GetClientTeam(client) == 2) if(!StrEqual(cmd1, ClassName(red), false)) return Plugin_Handled;
+	if(GetClientTeam(client) == 3) if(!StrEqual(cmd1, ClassName(blu), false)) return Plugin_Handled;
+
+	return Plugin_Continue;
+}
+
+stock SetClass)
+{
+	for (new i = 1; i <= MaxClients; i++) 
+	{
+		if(IsValidClient(i))
+		{
+			if(GetClientTeam(i) == 2) TF2_SetPlayerClass(i, red);
+			else if(GetClientTeam(i) == 3) TF2_SetPlayerClass(i, blu);
+				
+			if(red == blu) melee = true;
+			else melee = false;
+				
+			TF2_RespawnPlayer(i);
+		}
+	}
+}
 
 public Action:voteclass(client, args)
 {
@@ -91,7 +137,7 @@ public Handler_VoteCallback(Handle:menu, MenuAction:action, param1, param2)
 			
 			percent = GetVotePercent(votes, totalVotes);
 			
-			PrintToChatAll("%s %t", "Vote Successful", FUCCA, RoundToNearest(100.0*percent), totalVotes);
+			PrintToChatAll("%t", "Vote Successful", RoundToNearest(100.0*percent), totalVotes);
 			
 			if(StringToInt(aa[0]) == 2) PrintToChatAll("%s[SM] 레드팀 클래스는 %s 입니다. (곧 클래스가 변경됩니다.)", FUCCA, ClassIndex);
 			else PrintToChatAll("%s블루팀 클래스는 %s 입니다. (곧 클래스가 변경됩니다.)", FUCCA, ClassIndex);
@@ -126,12 +172,14 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	
 	red = TFClassType:mt_rand(1, 9);
 	blu = TFClassType:mt_rand(1, 9); 
-
-	SetClass();
 	
 	PrintCenterTextAll("%s vs %s", ClassName(red), ClassName(blu));
+	
+	CreateTimer(2.0, Timer_Delay, _, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
 }
+
+public Action:Timer_Delay(Handle:timer) SetClass();
 
 public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -162,40 +210,6 @@ public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 	
 	ChangePlayerWeaponSlot(client, 2);
 	return Plugin_Continue;
-}
-
-public Action:hook_JoinClass(client, const String:command[], argc)
-{
-	if(g_bWaitingForPlayers) return Plugin_Continue;
-	if(red == TFClass_Unknown || blu == TFClass_Unknown) return Plugin_Continue;
-	
-	decl String:cmd1[32];
-	
-	if(argc < 1) return Plugin_Handled;
-	
-	GetCmdArg(1, cmd1, sizeof(cmd1));
-	
-	if(GetClientTeam(client) == 2) if(!StrEqual(cmd1, ClassName(red), false)) return Plugin_Handled;
-	if(GetClientTeam(client) == 3) if(!StrEqual(cmd1, ClassName(blu), false)) return Plugin_Handled;
-
-	return Plugin_Continue;
-}
-
-stock SetClass()
-{
-	for (new i = 1; i <= MaxClients; i++) 
-	{
-		if(IsValidClient(i))
-		{
-			if(GetClientTeam(i) == 2) TF2_SetPlayerClass(i, red);
-			else if(GetClientTeam(i) == 3) TF2_SetPlayerClass(i, blu);
-			
-			if(red == blu) melee = true;
-			else melee = false;
-			
-			TF2_RespawnPlayer(i);
-		}
-	}
 }
 
 stock String:ClassName(TFClassType:team)
