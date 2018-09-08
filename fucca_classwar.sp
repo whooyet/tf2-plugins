@@ -54,7 +54,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 	return Plugin_Continue;
 }
 
-stock SetClass)
+stock SetClass()
 {
 	for (new i = 1; i <= MaxClients; i++) 
 	{
