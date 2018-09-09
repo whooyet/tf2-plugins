@@ -11,6 +11,17 @@ new bool:melee;
 
 new Float:VoteCoolTime;
 
+new Handle:CvarVoteTime = INVALID_HANDLE;
+
+public Plugin:myinfo = 
+{
+	name = "[TF2] Class War",
+	author = "Fucca",
+	description = "So simple",
+	version = "1.0",
+	url = "https://steamcommunity.com/id/ssssssaaaazzzzzxxc/"
+}
+
 public OnPluginStart()
 {
 	LoadTranslations("basevotes.phrases");
@@ -20,6 +31,8 @@ public OnPluginStart()
 	RegAdminCmd("sm_vc", voteclass, 0);
 	
 	AddCommandListener(hook_JoinClass, "joinclass");
+	
+	CvarVoteTime = CreateConVar("sm_fcw", "60.7", "로켓 이펙트 수정 ㄱㄱ");
 }
 
 public OnMapStart()
@@ -48,9 +61,23 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 	
 	GetCmdArg(1, cmd1, sizeof(cmd1));
 	
-	if(GetClientTeam(client) == 2) if(!StrEqual(cmd1, ClassName(red), false)) return Plugin_Handled;
-	if(GetClientTeam(client) == 3) if(!StrEqual(cmd1, ClassName(blu), false)) return Plugin_Handled;
-
+	if(GetClientTeam(client) == 2)
+	{
+		if(!StrEqual(cmd1, ClassName(red), false))
+		{
+			FakeClientCommand(client, "joinclass %s", ClassName(red));
+			return Plugin_Handled;
+		}
+	}
+	
+	if(GetClientTeam(client) == 3)
+	{
+		if(!StrEqual(cmd1, ClassName(blu), false))
+		{
+			FakeClientCommand(client, "joinclass %s", ClassName(blu));
+			return Plugin_Handled;
+		}
+	}
 	return Plugin_Continue;
 }
 
@@ -73,9 +100,9 @@ stock SetClass()
 
 public Action:voteclass(client, args)
 {
-	if(!CheckCoolTime(client, 45.0))
+	if(!CheckCoolTime(client, GetConVarFloat(CvarVoteTime)))
 	{
-		PrintToChat(client, "%s45초 후에 다시 사용하세요. (45초 / %1.f초)", FUCCA, GetEngineTime() - VoteCoolTime);
+		PrintToChat(client, "%s%.1f초 후에 다시 사용하세요. (%.1f초 / %.1f초)", FUCCA, GetConVarFloat(CvarVoteTime), GetConVarFloat(CvarVoteTime), GetEngineTime() - VoteCoolTime);
 		return Plugin_Handled;
 	}
 	VoteCoolTime = GetEngineTime();
