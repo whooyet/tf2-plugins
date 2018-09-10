@@ -18,7 +18,7 @@ public Plugin:myinfo =
 	name = "[TF2] Class War",
 	author = "Fucca",
 	description = "So simple",
-	version = "1.0",
+	version = "1.2",
 	url = "https://steamcommunity.com/id/ssssssaaaazzzzzxxc/"
 }
 
@@ -32,7 +32,7 @@ public OnPluginStart()
 	
 	AddCommandListener(hook_JoinClass, "joinclass");
 	
-	CvarVoteTime = CreateConVar("sm_fcw", "60.7", "로켓 이펙트 수정 ㄱㄱ");
+	CvarVoteTime = CreateConVar("sm_fcw", "60.7", "클래스 체인지 투표 쿨타임");
 }
 
 public OnMapStart()
@@ -139,8 +139,22 @@ public Action:voteclass(client, args)
 	
 	SetMenuExitButton(voteMenu, false);
 	
+	int iClients[MAXPLAYERS + 1] = { -1, ... };
+	int iClientsNum;
+	
 	for (new i = 1; i <= MaxClients; i++) 
-		if(IsValidClient(i)) if(GetClientTeam(client) == GetClientTeam(i)) VoteMenuToAll(voteMenu, 30);
+	{
+		if(IsValidClient(i))
+		{
+			if(GetClientTeam(client) == GetClientTeam(i))
+			{
+				iClients[iClientsNum] = i;
+				iClientsNum++;
+			}
+		}
+	}
+	
+	VoteMenu(voteMenu, iClients, iClientsNum, 30);
 	return Plugin_Handled;
 }
 
@@ -237,6 +251,19 @@ public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 	
 	ChangePlayerWeaponSlot(client, 2);
 	return Plugin_Continue;
+}
+
+public OnGameFrame()
+{
+	new ent = -1;
+	while((ent = FindEntityByClassname(ent, "obj_*")) != -1)
+	{
+		if(IsValidEntity(ent))
+		{
+			new client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");	
+			if(IsValidClient(client) && TF2_GetPlayerClass(client) != TFClassType:TFClass_Engineer) AcceptEntityInput(ent, "Kill");
+		}
+	}
 }
 
 stock String:ClassName(TFClassType:team)
