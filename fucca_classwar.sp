@@ -18,7 +18,7 @@ public Plugin:myinfo =
 	name = "[TF2] Class War",
 	author = "Fucca",
 	description = "So simple",
-	version = "1.2",
+	version = "1.3",
 	url = "https://steamcommunity.com/id/ssssssaaaazzzzzxxc/"
 }
 
@@ -256,7 +256,25 @@ public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 public OnGameFrame()
 {
 	new ent = -1;
-	while((ent = FindEntityByClassname(ent, "obj_*")) != -1)
+	while((ent = FindEntityByClassname(ent, "obj_dispenser")) != -1)
+	{
+		if(IsValidEntity(ent))
+		{
+			new client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");	
+			if(IsValidClient(client) && TF2_GetPlayerClass(client) != TFClassType:TFClass_Engineer) AcceptEntityInput(ent, "Kill");
+		}
+	}
+	
+	while((ent = FindEntityByClassname(ent, "obj_sentrygun")) != -1)
+	{
+		if(IsValidEntity(ent))
+		{
+			new client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");	
+			if(IsValidClient(client) && TF2_GetPlayerClass(client) != TFClassType:TFClass_Engineer) AcceptEntityInput(ent, "Kill");
+		}
+	}
+	
+	while((ent = FindEntityByClassname(ent, "obj_teleporter")) != -1)
 	{
 		if(IsValidEntity(ent))
 		{
