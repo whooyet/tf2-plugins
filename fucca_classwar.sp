@@ -28,6 +28,8 @@ public OnPluginStart()
 	
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("post_inventory_application", inven);
+	HookEvent("player_death", Player_Death);
+	
 	RegAdminCmd("sm_vc", voteclass, 0);
 	
 	AddCommandListener(hook_JoinClass, "joinclass");
@@ -79,23 +81,6 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 		}
 	}
 	return Plugin_Continue;
-}
-
-stock SetClass()
-{
-	for (new i = 1; i <= MaxClients; i++) 
-	{
-		if(IsValidClient(i))
-		{
-			if(GetClientTeam(i) == 2) TF2_SetPlayerClass(i, red);
-			else if(GetClientTeam(i) == 3) TF2_SetPlayerClass(i, blu);
-				
-			if(red == blu) melee = true;
-			else melee = false;
-				
-			TF2_RespawnPlayer(i);
-		}
-	}
 }
 
 public Action:voteclass(client, args)
@@ -253,6 +238,17 @@ public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
+public Action:Player_Death(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	if(g_bWaitingForPlayers) return Plugin_Continue;
+
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	if(GetClientTeam(client) == 2) TF2_SetPlayerClass(client, red)
+	else if(GetClientTeam(client) == 3) TF2_SetPlayerClass(client, blu);
+	return Plugin_Continue;
+}
+
 public OnGameFrame()
 {
 	new ent = -1;
@@ -280,6 +276,23 @@ public OnGameFrame()
 		{
 			new client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");	
 			if(IsValidClient(client) && TF2_GetPlayerClass(client) != TFClassType:TFClass_Engineer) AcceptEntityInput(ent, "Kill");
+		}
+	}
+}
+
+stock SetClass()
+{
+	for (new i = 1; i <= MaxClients; i++) 
+	{
+		if(IsValidClient(i))
+		{
+			if(GetClientTeam(i) == 2) TF2_SetPlayerClass(i, red);
+			else if(GetClientTeam(i) == 3) TF2_SetPlayerClass(i, blu);
+				
+			if(red == blu) melee = true;
+			else melee = false;
+				
+			TF2_RespawnPlayer(i);
 		}
 	}
 }
