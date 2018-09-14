@@ -186,7 +186,8 @@ public Action:Timer_Load(Handle:hTimer, Handle:hPack)
 	if(team == 2) red = TFClassType:index;
 	else blu = TFClassType:index;
 	
-	SetClass();
+	SetClass(2);
+	SetClass(3);
 }
 
 
@@ -205,7 +206,11 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	return Plugin_Continue;
 }
 
-public Action:Timer_Delay(Handle:timer) SetClass();
+public Action:Timer_Delay(Handle:timer)
+{
+	SetClass(2);
+	SetClass(3);
+}
 
 public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -280,21 +285,24 @@ public OnGameFrame()
 	}
 }
 
-stock SetClass()
+// server crash
+stock SetClass(team)
 {
 	for (new i = 1; i <= MaxClients; i++) 
 	{
 		if(IsValidClient(i))
 		{
-			if(GetClientTeam(i) == 2) TF2_SetPlayerClass(i, red);
-			else if(GetClientTeam(i) == 3) TF2_SetPlayerClass(i, blu);
-				
-			if(red == blu) melee = true;
-			else melee = false;
-				
-			TF2_RespawnPlayer(i);
+			if(GetClientTeam(i) == team)
+			{
+				if(team == 2) TF2_SetPlayerClass(i, red);
+				else if(team == 3) TF2_SetPlayerClass(i, blu);
+				TF2_RespawnPlayer(i);
+			}
 		}
 	}
+	
+	if(red == blu) melee = true;
+	else melee = false;
 }
 
 stock String:ClassName(TFClassType:team)
