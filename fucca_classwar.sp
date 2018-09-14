@@ -18,7 +18,7 @@ public Plugin:myinfo =
 	name = "[TF2] Class War",
 	author = "Fucca",
 	description = "So simple",
-	version = "1.3",
+	version = "1.4",
 	url = "https://steamcommunity.com/id/ssssssaaaazzzzzxxc/"
 }
 
@@ -28,7 +28,7 @@ public OnPluginStart()
 	
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("post_inventory_application", inven);
-	HookEvent("player_death", Player_Death);
+	HookEvent("player_spawn", Player_Spawn, EventHookMode_Pre);
 	
 	RegAdminCmd("sm_vc", voteclass, 0);
 	
@@ -199,7 +199,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	red = TFClassType:mt_rand(1, 9);
 	blu = TFClassType:mt_rand(1, 9); 
 	
-	PrintCenterTextAll("%s vs %s", ClassName(red), ClassName(blu));
+	PrintCenterTextAll("[BLU] %s vs [RED] %s", ClassName(blu), ClassName(red));
 	
 	CreateTimer(2.0, Timer_Delay, _, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
@@ -238,14 +238,14 @@ public Action:inven(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action:Player_Death(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:Player_Spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if(g_bWaitingForPlayers) return Plugin_Continue;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-	if(GetClientTeam(client) == 2) TF2_SetPlayerClass(client, red)
-	else if(GetClientTeam(client) == 3) TF2_SetPlayerClass(client, blu);
+	if(GetClientTeam(client) == 2) FakeClientCommand(client, "joinclass %s", ClassName(red));
+	else if(GetClientTeam(client) == 3) FakeClientCommand(client, "joinclass %s", ClassName(blu));
 	return Plugin_Continue;
 }
 
