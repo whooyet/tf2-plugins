@@ -85,9 +85,15 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 
 public Action:voteclass(client, args)
 {
+	if(GetClientTeam(client) <= 1)
+	{
+		PrintToChat(client, "%s 관전자는 투표할 권한이 없습니다.", FUCCA);
+		return Plugin_Handled;
+	}
+	
 	if(!CheckCoolTime(client, GetConVarFloat(CvarVoteTime)))
 	{
-		PrintToChat(client, "%s%.1f초 후에 다시 사용하세요. (%.1f초 / %.1f초)", FUCCA, GetConVarFloat(CvarVoteTime), GetConVarFloat(CvarVoteTime), GetEngineTime() - VoteCoolTime);
+		PrintToChat(client, "%s%.1f초 후에 다시 사용하세요. (%.1f초 / %.1f초)", FUCCA, GetConVarFloat(CvarVoteTime), GetEngineTime() - VoteCoolTime, GetConVarFloat(CvarVoteTime));
 		return Plugin_Handled;
 	}
 	VoteCoolTime = GetEngineTime();
@@ -301,7 +307,11 @@ stock SetClass(team)
 		}
 	}
 	
-	if(red == blu) melee = true;
+	if(red == blu)
+	{
+		melee = true;
+		PrintCenterTextAll("양 팀 클래스가 동일해서 밀리 모드로 변경됩니다.");
+	}
 	else melee = false;
 }
 
