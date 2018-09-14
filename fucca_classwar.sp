@@ -295,7 +295,7 @@ stock SetClass(team)
 			if(GetClientTeam(i) == team)
 			{
 				if(team == 2) TF2_SetPlayerClass(i, red);
-				else if(team == 3) TF2_SetPlayerClass(i, blu);
+				if(team == 3) TF2_SetPlayerClass(i, blu);
 				TF2_RespawnPlayer(i);
 			}
 		}
