@@ -13,12 +13,6 @@
 #define FUCCA "\x0700ccff[뿌까] "
 // #define flag 0
 
-#define MDL_LASER "sprites/laser.vmt"
-#define MDL_MINE "models/props_lab/tpplug.mdl"
-
-#define SND_MINEPUT "npc/roller/blade_cut.wav"
-#define SND_MINEACT "npc/roller/mine/rmine_blades_in2.wav"
-
 new Float:rof[MAXPLAYERS+1];
 new see[MAXPLAYERS+1];
 new bool:seeb[MAXPLAYERS+1];
@@ -30,14 +24,12 @@ new Float:sPos[MAXPLAYERS+1][2][3];
 
 new sec;
 
-int gCount = 1;
-
 public Plugin:myinfo = 
 {
 	name = "Generic Admin Commands",
 	author = "Pelipoika + fucca",
 	description = "A bunch of general admin commands",
-	version = "1.5.2",
+	version = "1.5.1",
 	url = "googlehammer.com"
 }
 
@@ -86,8 +78,6 @@ public OnPluginStart()
 	
 	RegAdminCmd("sm_pos", Command_pos, flag, "위치 값 알아냅니다.");
 	
-	RegConsoleCmd("sm_mine", Command_TripMine);
-	
 	AddMultiTargetFilter("@admin", admin, "all admin", false) // 모든 어드민
 	AddMultiTargetFilter("@party", member, "PPPPPAAAARRRRTTTTYYYY", false) // 모든 파티원
 	AddMultiTargetFilter("@rb", redbots, "all red bots", false) //모든 레드봇
@@ -113,12 +103,6 @@ public OnMapStart()
 	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_03sec.mp3");
 	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_02sec.mp3");
 	PrecacheSound("vo/halloween_merasmus/sf14_merasmus_begins_01sec.mp3");
-	
-	PrecacheModel(MDL_MINE, true);
-	PrecacheModel(MDL_LASER, true);
-	
-	PrecacheSound(SND_MINEPUT, true);
-	PrecacheSound(SND_MINEACT, true);
 }
 
 public OnClientPutInServer(client)
@@ -1349,13 +1333,6 @@ public Action:Command_pos(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_TripMine(client, args)
-{
-	if (!IsClientInGame(client)) return Plugin_Handled;
-	SetMine(client);
-	return Plugin_Handled;
-}
-
 stock Attribute(index, att, Float:time)
 {
 	new Handle:hTemp;
@@ -1418,148 +1395,6 @@ public Action:OnPlayerRunCmd(client, &iButtons, &iImpulse, Float:fVel[3], Float:
 		}
 	}
 	return Plugin_Continue;
-}
-
-stock SetMine(client)
-{
-	new String:beam[64], String:beammdl[64], String:tmp[128];
-	
-	Format(beam, sizeof(beam), "tmbeam%d", gCount);
-	Format(beammdl, sizeof(beammdl), "tmbeammdl%d", gCount);
-	
-	gCount++;
-	if (gCount > 10000) gCount = 1;
-	
-	new Float:start[3], Float:angle[3], Float:end[3], Float:normal[3], Float:beamend[3];
-	
-	GetClientEyePosition(client, start);
-	GetClientEyeAngles(client, angle);
-	GetAngleVectors(angle, end, NULL_VECTOR, NULL_VECTOR);
-	NormalizeVector(end, end);
-
-	start[0]=start[0]+end[0]*24.0;
-	start[1]=start[1]+end[1]*24.0;
-	start[2]=start[2]+end[2]*24.0;
-	
-	end[0]=start[0]+end[0]*64.0;
-	end[1]=start[1]+end[1]*64.0;
-	end[2]=start[2]+end[2]*64.0;
-	
-	TR_TraceRayFilter(start, end, CONTENTS_SOLID, RayType_EndPoint, FilterAll, 0);
-	
-	if (TR_DidHit(null))
-	{
-		TR_GetEndPosition(end, null);
-		TR_GetPlaneNormal(null, normal);
-		GetVectorAngles(normal, normal);
-		
-		TR_TraceRayFilter(end, normal, CONTENTS_SOLID, RayType_Infinite, FilterAll, 0);
-		TR_GetEndPosition(beamend, null);
-		
-		new ent = CreateEntityByName("prop_dynamic_override");
-		SetEntityModel(ent, MDL_MINE);
-		DispatchKeyValue(ent, "StartDisabled", "false");
-		DispatchSpawn(ent);
-		TeleportEntity(ent, end, normal, NULL_VECTOR);
-		SetEntProp(ent, Prop_Data, "m_usSolidFlags", 152);
-		SetEntProp(ent, Prop_Data, "m_CollisionGroup", 1);
-		SetEntityMoveType(ent, MOVETYPE_NONE);
-		SetEntProp(ent, Prop_Data, "m_MoveCollide", 0);
-		SetEntProp(ent, Prop_Data, "m_nSolidType", 6);
-		SetEntPropEnt(ent, Prop_Data, "m_hLastAttacker", client);
-		DispatchKeyValue(ent, "targetname", beammdl);
-		DispatchKeyValue(ent, "ExplodeRadius", "999999");
-		DispatchKeyValue(ent, "ExplodeDamage", "400");
-		Format(tmp, sizeof(tmp), "%s,Break,,0,-1", beammdl);
-		DispatchKeyValue(ent, "OnHealthChanged", tmp);
-		Format(tmp, sizeof(tmp), "%s,Kill,,0,-1", beam);
-		DispatchKeyValue(ent, "OnBreak", tmp);
-		SetEntProp(ent, Prop_Data, "m_takedamage", 2);
-		AcceptEntityInput(ent, "Enable");
-		HookSingleEntityOutput(ent, "OnBreak", mineBreak, true);
-
-		new ent2 = CreateEntityByName("env_beam");
-		TeleportEntity(ent2, beamend, NULL_VECTOR, NULL_VECTOR);
-		SetEntityModel(ent2, MDL_LASER);
-		DispatchKeyValue(ent2, "texture", MDL_LASER);
-		DispatchKeyValue(ent2, "targetname", beam);
-		DispatchKeyValue(ent2, "TouchType", "4");
-		DispatchKeyValue(ent2, "LightningStart", beam);
-		DispatchKeyValue(ent2, "BoltWidth", "4.0");
-		DispatchKeyValue(ent2, "life", "0");
-		DispatchKeyValue(ent2, "rendercolor", "0 0 0");
-		DispatchKeyValue(ent2, "renderamt", "0");
-		DispatchKeyValue(ent2, "HDRColorScale", "1.0");
-		DispatchKeyValue(ent2, "decalname", "Bigshot");
-		DispatchKeyValue(ent2, "StrikeTime", "0");
-		DispatchKeyValue(ent2, "TextureScroll", "35");
-		Format(tmp, sizeof(tmp), "%s,Break,,0,-1", beammdl);
-		DispatchKeyValue(ent2, "OnTouchedByEntity", tmp);	 
-		SetEntPropVector(ent2, Prop_Data, "m_vecEndPos", end);
-		SetEntPropFloat(ent2, Prop_Data, "m_fWidth", 4.0);
-		AcceptEntityInput(ent2, "TurnOff");
-
-		DataPack hData = new DataPack();
-		CreateTimer(2.0, TurnBeamOn, hData);
-		hData.WriteCell(client);
-		hData.WriteCell(ent);
-		hData.WriteCell(ent2);
-		hData.WriteFloat(end[0]);
-		hData.WriteFloat(end[1]);
-		hData.WriteFloat(end[2]);
-	}
-	else PrintHintText(client, "가까이서 설치하세요.");
-}
-
-public Action:TurnBeamOn(Handle:timer, DataPack:hData)
-{
-	new String:color[26];
-
-	hData.Reset();
-	new client = hData.ReadCell();
-	new ent = hData.ReadCell();
-	new ent2 = hData.ReadCell();
-
-	if (IsValidEntity(ent))
-	{
-		// To Do: Game-based team checks and handling.
-		new team = GetClientTeam(client);
-		if(team == 2)
-		{
-			color = "255 0 0";
-		}
-		else if(team == 3)
-		{
-			color = "0 0 255";
-		}
-		else
-		{
-			color = "0 255 255";
-		}
-
-		DispatchKeyValue(ent2, "rendercolor", color);
-		AcceptEntityInput(ent2, "TurnOn");
-
-		new Float:end[3];
-		end[0] = hData.ReadFloat();
-		end[1] = hData.ReadFloat();
-		end[2] = hData.ReadFloat();
-
-		EmitSoundToAll(SND_MINEACT, ent, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, 100, ent, end, NULL_VECTOR, true, 0.0);
-	}
-
-	delete hData;
-}
-
-public void mineBreak(const char[] output, int caller, int activator, float delay)
-{
-	UnhookSingleEntityOutput(caller, "OnBreak", mineBreak);
-	AcceptEntityInput(caller,"kill");
-}
-
-public bool FilterAll(int entity, int contentsMask)
-{
-	return false;
 }
 
 stock Fucca_ReplyToCommand(client, String:say[]) ReplyToCommand(client, "%s\x07FFFFFF%s", FUCCA, say);
